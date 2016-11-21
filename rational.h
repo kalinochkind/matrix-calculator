@@ -5,6 +5,16 @@
 #include <vector>
 #include <string>
 #include <exception>
+#include <stdexcept>
+#include <sstream>
+
+template<class T>
+const std::string toString(const T &a)
+{
+    std::ostringstream os;
+    os << a;
+    return os.str();
+}
 
 enum compare_t
 {
@@ -222,7 +232,7 @@ public:
         std::string res = (negative ? "-" : "");
         for (auto i = digits.rbegin(); i != digits.rend(); ++i)
         {
-            std::string temp = std::to_string(*i);
+            std::string temp = ::toString(*i);
             if (i != digits.rbegin())
             {
                 while (temp.length() < BLOCK_SIZE)
