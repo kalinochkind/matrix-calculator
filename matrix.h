@@ -246,6 +246,16 @@ public:
         delete[] arr;
     }
 
+    static const Matrix identity(unsigned n)
+    {
+        Matrix res(n);
+        for(unsigned i=0;i<n;++i)
+        {
+            res[i][i] = 1;
+        }
+        return res;
+    }
+
     row_t operator[](unsigned r)
     {
         return row_t(this->arr + r * N);
@@ -380,11 +390,7 @@ public:
     const Matrix inverted() const
     {
         Matrix tmp(*this);
-        Matrix ext(M, N);
-        for (unsigned i = 0; i < N; ++i)
-        {
-            ext[i][i] = Field(1);
-        }
+        Matrix ext = Matrix::identity(N);
         tmp.inverseExt(ext);
         return ext;
     }

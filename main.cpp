@@ -78,11 +78,34 @@ void f_solve()
 
 }
 
+void f_pow()
+{
+    NumMatrix a = getMatrix();
+    if(a.width() != a.height())
+    {
+        cout << "This can be done only for square matrices" << endl;
+        return;
+    }
+    cout << "Power: ";
+    unsigned p;
+    cin >> p;
+    NumMatrix t = NumMatrix::identity(a.width());
+    while(p)
+    {
+        if(p & 1)
+            t *= a;
+        p >>= 1;
+        a *= a;
+    }
+    cout << "Result:\n" << t;
+}
+
 map<string, void (*)()> ops = {{"rank",  f_rank},
                                {"det",   f_det},
                                {"inv",   f_inv},
                                {"mul",   f_mul},
-                               {"solve", f_solve}};
+                               {"solve", f_solve},
+                               {"pow",   f_pow}};
 
 int main(int argc, char **argv)
 {
