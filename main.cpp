@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include "parser.h"
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -100,58 +101,113 @@ void f_pow()
     cout << "Result:\n" << t;
 }
 
+void processOp(string op, vector<NumMatrix> &st)
+{
+    if(op == "0+")
+    {
+        assert(st.size() >= 2);
+        NumMatrix a = st.back();
+        st.pop_back();
+        st.back() += a;
+    }
+    if(op == "1*")
+    {
+        assert(st.size() >= 2);
+        NumMatrix a = st.back();
+        st.pop_back();
+        if(a.width() == 1 && a.height() == 1)
+        {
+            st.back() *= a[0][0];
+        }
+        else
+        {
+            st.back() *= a;
+        }
+    }
+    if(op == "2^")
+    {
+        assert(st.size() >= 2);
+        NumMatrix a = st.back();
+        assert(a.height() == 1);
+        assert(a.width() == 1);
+        st.pop_back();
+        st.back() = st.back().power(int(a[0][0].numerator()));
+    }
+}
 
 void f_expr()
 {
     cout << "Expression: ";
     string s;
     getline(cin, s);
-    s += ' ';
+    auto v = splitExpression(s);
     map<char, NumMatrix> mmap;
-    NumMatrix m, cm;
-    string power;
-    for (char i : s)
+    vector<pair<token_type, string> > opst;
+    vector<NumMatrix> st;
+    for(auto i : v)
     {
-        if (i == '^')
+        if(i.first == TOKEN_NUMBER)
         {
-            continue;
+            NumMatrix tt(1, 1);
+            tt[0][0] = BigInteger(i.second);
+            st.push_back(tt);
         }
-        else if (('0' <= i && i <= '9') || i == '-')
+        if(i.first == TOKEN_MATRIX)
         {
-            power.push_back(i);
-            continue;
+            if(!mmap.count(i.second[0]))
+                mmap[i.second[0]] = getMatrix(string("Matrix ") + i.second + ':');
+            st.push_back(mmap[i.second[0]]);
         }
-        else if(power.length())
+        if(i.first == TOKEN_FUNC)
         {
-            cm = cm.power(atoi(power.c_str()));
-            power = "";
+            opst.push_back(i);
         }
-        if ('A' <= i && i <= 'Z')  // matrix name
+        // comma goes here
+        if(i.first == TOKEN_OP)
         {
-            if(!m.width())
+            while(opst.size() && opst.back().first == TOKEN_OP && i.second <= opst.back().second)
             {
-                m = cm;
+                processOp(opst.back().second, st);
+                opst.pop_back();
             }
-            else
-            {
-                m *= cm;
-            }
-            if (!mmap.count(i))
-            {
-                mmap[i] = getMatrix(string("Matrix ") + i + ':');
-            }
-            cm = mmap[i];
+            opst.push_back(i);
         }
+        if(i.first == TOKEN_LEFTPAR)
+        {
+            opst.push_back(i);
+        }
+        if(i.first == TOKEN_RIGHTPAR)
+        {
+            while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
+            {
+                processOp(opst.back().second, st);
+                opst.pop_back();
+            }
+            if(opst.empty())
+            {
+                cout << "Invalid expression" << endl;
+                exit(1);
+            }
+            opst.pop_back();
+            if(opst.size() && opst.back().first == TOKEN_FUNC)
+            {
+                processOp(opst.back().second, st);
+                opst.pop_back();
+            }
+        }
+
     }
-    if(!m.width())
+    while(opst.size())
     {
-        m = cm;
+        if(opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
+        {
+            cout << "Invalid expression" << endl;
+            exit(1);
+        }
+        processOp(opst.back().second, st);
+        opst.pop_back();
     }
-    else
-    {
-        m *= cm;
-    }
-    cout << "Result:\n" <<  m;
+    cout << "Result:\n" << st[0];
 }
 
 map<string, void (*)()> ops = {{"rank",  f_rank},

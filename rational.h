@@ -225,6 +225,11 @@ public:
         return res;
     }
 
+    explicit operator int() const
+    {
+        return digits.empty() ? 0 : (digits[0] * (negative ? -1 : 1));
+    }
+
     std::string toString() const
     {
         if (digits.empty())
