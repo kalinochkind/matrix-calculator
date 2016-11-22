@@ -5,33 +5,34 @@
 
 using namespace std;
 
-pair<unsigned, unsigned> getSize()
+NumMatrix getMatrix()
 {
-    string s;
-    cout << "Size: ";
-    while (s.empty() || s[0] == ' ' || s[0] == '\n')
-        getline(cin, s);
-    unsigned a, b;
-    istringstream iss(s);
-    if (!(iss >> a))
-        return {0, 0};
-    if (!(iss >> b))
-        return {a, a};
-    return {a, b};
-};
-
-NumMatrix getMatrix(unsigned szx = 0, unsigned szy = 0)
-{
-    pair<unsigned, unsigned> sz;
-    if (szx > 0 && szy > 0)
+    string s, sum;
+    getline(cin, s);
+    unsigned width = 0, height = 0;
+    while(s.length())
     {
-        sz.first = szx;
-        sz.second = szy;
+        istringstream is;
+        is.str(s);
+        unsigned cwidth = 0, dummy;
+        while(is >> dummy)
+            ++cwidth;
+        if(!cwidth)
+            break;
+        if(width && width != cwidth)
+        {
+            cout << "Incorrect matrix\n";
+            terminate();
+        }
+        width = cwidth;
+        ++height;
+        sum += s + ' ';
+        getline(cin, s);
     }
-    else
-        sz = getSize();
-    NumMatrix m(sz.first, sz.second);
-    cin >> m;
+    NumMatrix m(height, width);
+    istringstream is;
+    is.str(sum);
+    is >> m;
     return m;
 }
 
@@ -62,10 +63,13 @@ void f_mul()
 
 void f_solve()
 {
-    unsigned sz = getSize().first;
-    if (!sz)
+    NumMatrix a = getMatrix();
+    unsigned sz = a.height();
+    if(!sz || a.width() != sz + 1)
+    {
+        cout << "Invalid matrix\n";
         return;
-    NumMatrix a = getMatrix(sz, sz + 1);
+    }
     NumMatrix sys = a.submatrix(0, 0, sz - 1, sz - 1);
     NumMatrix right = a.submatrix(0, sz, sz - 1, sz);
     sys.inverseExt(right);
