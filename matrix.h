@@ -214,6 +214,8 @@ class Matrix
     }
 
 public:
+    Matrix(): M(0), N(0), arr(nullptr) {};
+
     Matrix(unsigned height, unsigned width): M(height), N(width), arr(new Field[height * width]) {};
 
     Matrix(unsigned size): Matrix(size, size) {};
@@ -249,7 +251,7 @@ public:
     static const Matrix identity(unsigned n)
     {
         Matrix res(n);
-        for(unsigned i=0;i<n;++i)
+        for (unsigned i = 0; i < n; ++i)
         {
             res[i][i] = 1;
         }
@@ -475,7 +477,7 @@ public:
     {
         if (N != M)
             throw matrix_error("Trying to inverse a non-square matrix");
-        if(M != ext.M)
+        if (M != ext.M)
         {
             throw matrix_error("Invalid use of inverseExt");
         }
@@ -490,7 +492,7 @@ public:
             {
                 (*this)[i][j] /= coeff;
             }
-            for(unsigned j=0;j<ext.N;++j)
+            for (unsigned j = 0; j < ext.N; ++j)
             {
                 ext[i][j] /= coeff;
             }
@@ -505,6 +507,25 @@ public:
                 (*this)[i][j] = Field();
             }
         }
+    }
+
+    const Matrix power(int pow)
+    {
+        if (M != N)
+            throw matrix_error("Power is only defined for square matrices");
+        Matrix t = identity(width());
+        Matrix a(*this);
+        unsigned p = abs(pow);
+        while (p)
+        {
+            if (p & 1)
+                t *= a;
+            p >>= 1;
+            a *= a;
+        }
+        if (pow < 0)
+            t.inverse();
+        return t;
     }
 };
 

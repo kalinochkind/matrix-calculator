@@ -16,7 +16,8 @@ NumMatrix getMatrix(string prompt = "Enter the matrix:")
     {
         istringstream is;
         is.str(s);
-        unsigned cwidth = 0, dummy;
+        unsigned cwidth = 0;
+        Rational dummy;
         while (is >> dummy)
             ++cwidth;
         if (!cwidth)
@@ -95,15 +96,62 @@ void f_pow()
     cout << "Power: ";
     unsigned p;
     cin >> p;
-    NumMatrix t = NumMatrix::identity(a.width());
-    while (p)
-    {
-        if (p & 1)
-            t *= a;
-        p >>= 1;
-        a *= a;
-    }
+    NumMatrix t = a.power(p);
     cout << "Result:\n" << t;
+}
+
+
+void f_expr()
+{
+    cout << "Expression: ";
+    string s;
+    getline(cin, s);
+    s += ' ';
+    map<char, NumMatrix> mmap;
+    NumMatrix m, cm;
+    string power;
+    for (char i : s)
+    {
+        if (i == '^')
+        {
+            continue;
+        }
+        else if (('0' <= i && i <= '9') || i == '-')
+        {
+            power.push_back(i);
+            continue;
+        }
+        else if(power.length())
+        {
+            cm = cm.power(atoi(power.c_str()));
+            power = "";
+        }
+        if ('A' <= i && i <= 'Z')  // matrix name
+        {
+            if(!m.width())
+            {
+                m = cm;
+            }
+            else
+            {
+                m *= cm;
+            }
+            if (!mmap.count(i))
+            {
+                mmap[i] = getMatrix(string("Matrix ") + i + ':');
+            }
+            cm = mmap[i];
+        }
+    }
+    if(!m.width())
+    {
+        m = cm;
+    }
+    else
+    {
+        m *= cm;
+    }
+    cout << "Result:\n" <<  m;
 }
 
 map<string, void (*)()> ops = {{"rank",  f_rank},
@@ -111,7 +159,8 @@ map<string, void (*)()> ops = {{"rank",  f_rank},
                                {"inv",   f_inv},
                                {"mul",   f_mul},
                                {"solve", f_solve},
-                               {"pow",   f_pow}};
+                               {"pow",   f_pow},
+                               {"expr",  f_expr}};
 
 int main(int argc, char **argv)
 {
