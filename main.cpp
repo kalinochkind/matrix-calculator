@@ -5,24 +5,26 @@
 
 using namespace std;
 
-NumMatrix getMatrix()
+NumMatrix getMatrix(string prompt = "Enter the matrix:")
 {
     string s, sum;
-    getline(cin, s);
+    cout << prompt << endl;
+    while (s.empty())
+        getline(cin, s);
     unsigned width = 0, height = 0;
-    while(s.length())
+    while (s.length())
     {
         istringstream is;
         is.str(s);
         unsigned cwidth = 0, dummy;
-        while(is >> dummy)
+        while (is >> dummy)
             ++cwidth;
-        if(!cwidth)
+        if (!cwidth)
             break;
-        if(width && width != cwidth)
+        if (width && width != cwidth)
         {
             cout << "Incorrect matrix\n";
-            terminate();
+            exit(1);
         }
         width = cwidth;
         ++height;
@@ -56,8 +58,8 @@ void f_inv()
 
 void f_mul()
 {
-    NumMatrix a = getMatrix();
-    NumMatrix b = getMatrix();
+    NumMatrix a = getMatrix("First matrix:");
+    NumMatrix b = getMatrix("Second matrix:");
     cout << "Product:\n" << (a * b);
 }
 
@@ -65,7 +67,7 @@ void f_solve()
 {
     NumMatrix a = getMatrix();
     unsigned sz = a.height();
-    if(!sz || a.width() != sz + 1)
+    if (!sz || a.width() != sz + 1)
     {
         cout << "Invalid matrix\n";
         return;
@@ -85,7 +87,7 @@ void f_solve()
 void f_pow()
 {
     NumMatrix a = getMatrix();
-    if(a.width() != a.height())
+    if (a.width() != a.height())
     {
         cout << "This can be done only for square matrices" << endl;
         return;
@@ -94,9 +96,9 @@ void f_pow()
     unsigned p;
     cin >> p;
     NumMatrix t = NumMatrix::identity(a.width());
-    while(p)
+    while (p)
     {
-        if(p & 1)
+        if (p & 1)
             t *= a;
         p >>= 1;
         a *= a;
