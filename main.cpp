@@ -112,84 +112,51 @@ void f_pow()
     cout << "Result:\n" << t;
 }
 
+map<string, pair<int, NumMatrix (*)(NumMatrix &, NumMatrix &)> > operations =
+        {
+                {"+",     {2, [](NumMatrix &a, NumMatrix &b) { return a + b; }}},
+                {"^",     {2, [](NumMatrix &a, NumMatrix &b) {
+                    assert(b.width() == 1 && b.height() == 1);
+                    return a.power(int(b[0][0].numerator()));
+                }}},
+                {"*",     {2, [](NumMatrix &a, NumMatrix &b) {
+                    if (a.height() == 1 && a.width() == 1)
+                        return b * a[0][0];
+                    else if (b.height() == 1 && b.width() == 1)
+                        return a * b[0][0];
+                    else
+                        return a * b;
+                }}},
+                {"-",     {2, [](NumMatrix &a, NumMatrix &b) { return a - b; }}},
+                {"_",     {1, [](NumMatrix &a, NumMatrix &) { return -a; }}},
+                {"det",   {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.det()); }}},
+                {"rank",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.rank()); }}},
+                {"trace", {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.trace()); }}},
+                {"t",     {1, [](NumMatrix &a, NumMatrix &) { return a.transposed(); }}},
+                {"inv",   {1, [](NumMatrix &a, NumMatrix &) { return a.inverted(); }}},
+                {"id",    {1, [](NumMatrix &a, NumMatrix &) {
+                    assert(a.width() == 1 && a.height() == 1);
+                    return NumMatrix::identity(abs(int(a[0][0].numerator())));
+                }}}
+        };
+
 void processOp(string op, vector<NumMatrix> &st)
 {
-    if (op == "+")
+    if (!operations.count(op))
     {
-        assert(st.size() >= 2);
+        cout << "Invalid function: " << op << endl;
+        exit(1);
+    }
+    assert(int(st.size()) >= operations[op].first);
+    if (operations[op].first == 1)
+    {
+        st.back() = operations[op].second(st.back(), st.back());
+    }
+    else
+    {
         NumMatrix a = st.back();
         st.pop_back();
-        st.back() += a;
-    }
-    if (op == "*")
-    {
-        assert(st.size() >= 2);
-        NumMatrix a = st.back();
-        st.pop_back();
-        if (a.width() == 1 && a.height() == 1)
-        {
-            st.back() *= a[0][0];
-        }
-        else if (st.back().width() == 1 && st.back().height() == 1)
-        {
-            st.back() = a * st.back()[0][0];
-        }
-        else
-        {
-            st.back() *= a;
-        }
-    }
-    if (op == "^")
-    {
-        assert(st.size() >= 2);
-        NumMatrix a = st.back();
-        assert(a.height() == 1);
-        assert(a.width() == 1);
-        st.pop_back();
-        st.back() = st.back().power(int(a[0][0].numerator()));
-    }
-    if (op == "-")
-    {
-        assert(st.size() >= 2);
-        NumMatrix a = st.back();
-        st.pop_back();
-        st.back() -= a;
-    }
-    if (op == "_")
-    {
-        assert(st.size() >= 1);
-        st.back() = -st.back();
-    }
-    if (op == "det")
-    {
-        assert(st.size() >= 1);
-        NumMatrix a(1);
-        a[0][0] = st.back().det();
-        st.back() = a;
-    }
-    if (op == "rank")
-    {
-        assert(st.size() >= 1);
-        NumMatrix a(1);
-        a[0][0] = st.back().rank();
-        st.back() = a;
-    }
-    if (op == "trace")
-    {
-        assert(st.size() >= 1);
-        NumMatrix a(1);
-        a[0][0] = st.back().trace();
-        st.back() = a;
-    }
-    if (op == "t")
-    {
-        assert(st.size() >= 1);
-        st.back() = st.back().transposed();
-    }
-    if (op == "inv")
-    {
-        assert(st.size() >= 1);
-        st.back().inverse();
+        st.back() = operations[op].second(st.back(), a);
     }
 }
 
@@ -201,7 +168,7 @@ void f_expr()
     map<char, NumMatrix> mmap;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
-    for (auto i : v)
+    for (pair<token_type, string> &i : v)
     {
         NumMatrix tt(1, 1);
         switch (i.first)

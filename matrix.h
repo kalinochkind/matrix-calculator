@@ -258,6 +258,13 @@ public:
         return res;
     }
 
+    static const Matrix fromNumber(Field f)
+    {
+        Matrix a(1, 1);
+        a[0][0] = f;
+        return a;
+    }
+
     row_t operator[](unsigned r)
     {
         return row_t(this->arr + r * N);
