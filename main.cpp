@@ -6,12 +6,23 @@
 
 using namespace std;
 
+string safeGetline()
+{
+    string s;
+    while (s.empty())
+    {
+        getline(cin, s);
+        while (s.size() && isspace(s.back()))
+            s.pop_back();
+    }
+    return s;
+}
+
 NumMatrix getMatrix(string prompt = "Enter the matrix:")
 {
     string s, sum;
     cout << prompt << endl;
-    while (s.empty())
-        getline(cin, s);
+    s = safeGetline();
     unsigned width = 0, height = 0;
     while (s.length())
     {
@@ -185,8 +196,7 @@ void processOp(string op, vector<NumMatrix> &st)
 void f_expr()
 {
     cout << "Expression: ";
-    string s;
-    getline(cin, s);
+    string s = safeGetline();
     auto v = splitExpression(s);
     map<char, NumMatrix> mmap;
     vector<pair<token_type, string> > opst;
@@ -247,29 +257,42 @@ void f_expr()
         processOp(opst.back().second, st);
         opst.pop_back();
     }
-    cout << "Result:\n" << st[0];
+    if (st.size() == 1)
+        cout << "Result:\n" << st[0];
+    else
+        cout << "Invalid expression\n";
 }
+
 
 map<string, void (*)()> ops = {{"rank",  f_rank},
                                {"det",   f_det},
                                {"inv",   f_inv},
                                {"mul",   f_mul},
                                {"solve", f_solve},
-                               {"pow",   f_pow},
-                               {"expr",  f_expr}};
+                               {"pow",   f_pow}};
+
+void print_help()
+{
+    cout << "Usage: matrix [OPERATION]\n\n";
+    cout << "Operations: ";
+    int t = 0;
+    for (auto &i : ops)
+    {
+        cout << (t++ ? ", " : "") << i.first;
+    }
+    cout << endl << endl;
+}
 
 int main(int argc, char **argv)
 {
     if (argc == 1)
     {
-        cout << "Usage: matrix OPERATION\n\n";
-        cout << "Operations: ";
-        int t = 0;
-        for (auto &i : ops)
-        {
-            cout << (t++ ? ", " : "") << i.first;
-        }
-        cout << endl << endl;
+        f_expr();
+        return 0;
+    }
+    else if (string(argv[1]) == "help")
+    {
+        print_help();
         return 0;
     }
     if (ops[argv[1]])
@@ -279,8 +302,8 @@ int main(int argc, char **argv)
     else
     {
         cout << "Invalid operation" << endl;
+        print_help();
         return 1;
     }
-
     return 0;
 }

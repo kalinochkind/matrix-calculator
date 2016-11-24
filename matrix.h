@@ -532,6 +532,8 @@ public:
 template<class Field>
 std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
+    if(!a.width() || !a.height())
+        return out;
     for (unsigned i = 0; i < a.height(); ++i)
     {
         for (unsigned j = 0; j < a.width(); ++j)

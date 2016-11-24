@@ -14,13 +14,13 @@ bool rightassoc[128];
 
 const std::vector<std::pair<token_type, std::string> > splitExpression(const std::string &expr)
 {
-    priority['+'] = 0;
-    priority['-'] = 0;
-    priority['*'] = 1;
-    priority['^'] = 2;
-    priority['_'] = 3;
-    rightassoc['^'] = true;
-    rightassoc['_'] = true;
+    priority[int('+')] = 0;
+    priority[int('-')] = 0;
+    priority[int('*')] = 1;
+    priority[int('^')] = 2;
+    priority[int('_')] = 3;
+    rightassoc[int('^')] = true;
+    rightassoc[int('_')] = true;
     std::string func, num;
     std::vector<std::pair<token_type, std::string> > ans;
     token_type last = TOKEN_LEFTPAR;
