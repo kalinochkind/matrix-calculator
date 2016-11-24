@@ -51,7 +51,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                 ans.push_back({TOKEN_RIGHTPAR, ""});
             else
                 ans.push_back({TOKEN_OP, std::string() + i});
-            last = TOKEN_OP;
+            last = ans.back().first;
         }
         else if (i == '-')
         {
