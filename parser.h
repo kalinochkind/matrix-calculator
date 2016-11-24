@@ -33,7 +33,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if (num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
-            if (last == TOKEN_MATRIX || last == TOKEN_NUMBER)
+            if (last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
                 ans.push_back({TOKEN_OP, "*"});
             ans.push_back({TOKEN_MATRIX, std::string() + i});
             last = TOKEN_MATRIX;
@@ -46,7 +46,11 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
             if (i == '(')
+            {
+                if (last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
+                    ans.push_back({TOKEN_OP, "*"});
                 ans.push_back({TOKEN_LEFTPAR, ""});
+            }
             else if (i == ')')
                 ans.push_back({TOKEN_RIGHTPAR, ""});
             else
