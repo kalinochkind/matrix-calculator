@@ -9,15 +9,21 @@ enum token_type
     TOKEN_MATRIX, TOKEN_OP, TOKEN_FUNC, TOKEN_NUMBER, TOKEN_LEFTPAR, TOKEN_RIGHTPAR
 };
 
+int priority[128];
+bool rightassoc[128];
 
 const std::vector<std::pair<token_type, std::string> > splitExpression(const std::string &expr)
 {
-    std::string priority[128];
-    priority['+'] = "0+";
-    priority['*'] = "1*";
-    priority['^'] = "2^";
+    priority['+'] = 0;
+    priority['-'] = 0;
+    priority['*'] = 1;
+    priority['^'] = 2;
+    priority['_'] = 3;
+    rightassoc['^'] = true;
+    rightassoc['_'] = true;
     std::string func, num;
     std::vector<std::pair<token_type, std::string> > ans;
+    token_type last = TOKEN_LEFTPAR;
     for (char i : expr + ' ')
     {
         if ('A' <= i && i <= 'Z')
@@ -27,8 +33,10 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if (num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
+            if (last == TOKEN_MATRIX || last == TOKEN_NUMBER)
+                ans.push_back({TOKEN_OP, "*"});
             ans.push_back({TOKEN_MATRIX, std::string() + i});
-
+            last = TOKEN_MATRIX;
         }
         else if (i == '+' || i == '*' || i == '^' || i == '(' || i == ')')
         {
@@ -42,14 +50,33 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             else if (i == ')')
                 ans.push_back({TOKEN_RIGHTPAR, ""});
             else
-                ans.push_back({TOKEN_OP, priority[int(i)]});
+                ans.push_back({TOKEN_OP, std::string() + i});
+            last = TOKEN_OP;
         }
-        else if (i == '-' || ('0' <= i && i <= '9'))
+        else if (i == '-')
+        {
+            if (func.size())
+                ans.push_back({TOKEN_FUNC, func});
+            if (num.size())
+                ans.push_back({TOKEN_NUMBER, num});
+            num = func = "";
+            if (last == TOKEN_LEFTPAR || last == TOKEN_OP)
+            {
+                ans.push_back({TOKEN_OP, "_"});  // unary
+            }
+            else
+            {
+                ans.push_back({TOKEN_OP, "-"});
+            }
+            last = TOKEN_OP;
+        }
+        else if ('0' <= i && i <= '9')
         {
             if (func.size())
                 ans.push_back({TOKEN_FUNC, func});
             func = "";
             num.push_back(i);
+            last = TOKEN_NUMBER;
         }
         else if ('a' <= i && i <= 'z')
         {
@@ -57,6 +84,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                 ans.push_back({TOKEN_NUMBER, num});
             num = "";
             func.push_back(i);
+            last = TOKEN_FUNC;
         }
         else
         {

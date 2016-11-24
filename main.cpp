@@ -103,28 +103,32 @@ void f_pow()
 
 void processOp(string op, vector<NumMatrix> &st)
 {
-    if(op == "0+")
+    if (op == "+")
     {
         assert(st.size() >= 2);
         NumMatrix a = st.back();
         st.pop_back();
         st.back() += a;
     }
-    if(op == "1*")
+    if (op == "*")
     {
         assert(st.size() >= 2);
         NumMatrix a = st.back();
         st.pop_back();
-        if(a.width() == 1 && a.height() == 1)
+        if (a.width() == 1 && a.height() == 1)
         {
             st.back() *= a[0][0];
+        }
+        else if (st.back().width() == 1 && st.back().height() == 1)
+        {
+            st.back() = a * st.back()[0][0];
         }
         else
         {
             st.back() *= a;
         }
     }
-    if(op == "2^")
+    if (op == "^")
     {
         assert(st.size() >= 2);
         NumMatrix a = st.back();
@@ -132,6 +136,49 @@ void processOp(string op, vector<NumMatrix> &st)
         assert(a.width() == 1);
         st.pop_back();
         st.back() = st.back().power(int(a[0][0].numerator()));
+    }
+    if (op == "-")
+    {
+        assert(st.size() >= 2);
+        NumMatrix a = st.back();
+        st.pop_back();
+        st.back() -= a;
+    }
+    if (op == "_")
+    {
+        assert(st.size() >= 1);
+        st.back() = -st.back();
+    }
+    if (op == "det")
+    {
+        assert(st.size() >= 1);
+        NumMatrix a(1);
+        a[0][0] = st.back().det();
+        st.back() = a;
+    }
+    if (op == "rank")
+    {
+        assert(st.size() >= 1);
+        NumMatrix a(1);
+        a[0][0] = st.back().rank();
+        st.back() = a;
+    }
+    if (op == "trace")
+    {
+        assert(st.size() >= 1);
+        NumMatrix a(1);
+        a[0][0] = st.back().trace();
+        st.back() = a;
+    }
+    if (op == "t")
+    {
+        assert(st.size() >= 1);
+        st.back() = st.back().transposed();
+    }
+    if (op == "inv")
+    {
+        assert(st.size() >= 1);
+        st.back().inverse();
     }
 }
 
@@ -144,62 +191,55 @@ void f_expr()
     map<char, NumMatrix> mmap;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
-    for(auto i : v)
+    for (auto i : v)
     {
-        if(i.first == TOKEN_NUMBER)
+        NumMatrix tt(1, 1);
+        switch (i.first)
         {
-            NumMatrix tt(1, 1);
-            tt[0][0] = BigInteger(i.second);
-            st.push_back(tt);
-        }
-        if(i.first == TOKEN_MATRIX)
-        {
-            if(!mmap.count(i.second[0]))
-                mmap[i.second[0]] = getMatrix(string("Matrix ") + i.second + ':');
-            st.push_back(mmap[i.second[0]]);
-        }
-        if(i.first == TOKEN_FUNC)
-        {
-            opst.push_back(i);
-        }
-        // comma goes here
-        if(i.first == TOKEN_OP)
-        {
-            while(opst.size() && opst.back().first == TOKEN_OP && i.second <= opst.back().second)
-            {
-                processOp(opst.back().second, st);
+            case TOKEN_NUMBER:
+                tt[0][0] = BigInteger(i.second);
+                st.push_back(tt);
+                break;
+            case TOKEN_MATRIX:
+                if (!mmap.count(i.second[0]))
+                    mmap[i.second[0]] = getMatrix(string("Matrix ") + i.second + ':');
+                st.push_back(mmap[i.second[0]]);
+                break;
+            case TOKEN_OP:
+                while (opst.size() && opst.back().first == TOKEN_OP &&
+                       priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
+                       priority[int(opst.back().second[0])])
+                {
+                    processOp(opst.back().second, st);
+                    opst.pop_back();
+                }
+            case TOKEN_FUNC:
+            case TOKEN_LEFTPAR:
+                opst.push_back(i);
+                break;
+            case TOKEN_RIGHTPAR:
+                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                {
+                    processOp(opst.back().second, st);
+                    opst.pop_back();
+                }
+                if (opst.empty())
+                {
+                    cout << "Invalid expression" << endl;
+                    exit(1);
+                }
                 opst.pop_back();
-            }
-            opst.push_back(i);
+                if (opst.size() && opst.back().first == TOKEN_FUNC)
+                {
+                    processOp(opst.back().second, st);
+                    opst.pop_back();
+                }
+                break;
         }
-        if(i.first == TOKEN_LEFTPAR)
-        {
-            opst.push_back(i);
-        }
-        if(i.first == TOKEN_RIGHTPAR)
-        {
-            while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
-            {
-                processOp(opst.back().second, st);
-                opst.pop_back();
-            }
-            if(opst.empty())
-            {
-                cout << "Invalid expression" << endl;
-                exit(1);
-            }
-            opst.pop_back();
-            if(opst.size() && opst.back().first == TOKEN_FUNC)
-            {
-                processOp(opst.back().second, st);
-                opst.pop_back();
-            }
-        }
-
     }
-    while(opst.size())
+    while (opst.size())
     {
-        if(opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
+        if (opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
         {
             cout << "Invalid expression" << endl;
             exit(1);
