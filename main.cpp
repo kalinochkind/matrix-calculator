@@ -114,12 +114,12 @@ void f_pow()
 
 map<string, pair<int, NumMatrix (*)(NumMatrix &, NumMatrix &)> > operations =
         {
-                {"+",     {2, [](NumMatrix &a, NumMatrix &b) { return a + b; }}},
-                {"^",     {2, [](NumMatrix &a, NumMatrix &b) {
+                {"+",      {2, [](NumMatrix &a, NumMatrix &b) { return a + b; }}},
+                {"^",      {2, [](NumMatrix &a, NumMatrix &b) {
                     assert(b.width() == 1 && b.height() == 1);
                     return a.power(int(b[0][0].numerator()));
                 }}},
-                {"*",     {2, [](NumMatrix &a, NumMatrix &b) {
+                {"*",      {2, [](NumMatrix &a, NumMatrix &b) {
                     if (a.height() == 1 && a.width() == 1)
                         return b * a[0][0];
                     else if (b.height() == 1 && b.width() == 1)
@@ -127,17 +127,20 @@ map<string, pair<int, NumMatrix (*)(NumMatrix &, NumMatrix &)> > operations =
                     else
                         return a * b;
                 }}},
-                {"-",     {2, [](NumMatrix &a, NumMatrix &b) { return a - b; }}},
-                {"_",     {1, [](NumMatrix &a, NumMatrix &) { return -a; }}},
-                {"det",   {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.det()); }}},
-                {"rank",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.rank()); }}},
-                {"trace", {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.trace()); }}},
-                {"t",     {1, [](NumMatrix &a, NumMatrix &) { return a.transposed(); }}},
-                {"inv",   {1, [](NumMatrix &a, NumMatrix &) { return a.inverted(); }}},
-                {"id",    {1, [](NumMatrix &a, NumMatrix &) {
+                {"-",      {2, [](NumMatrix &a, NumMatrix &b) { return a - b; }}},
+                {"_",      {1, [](NumMatrix &a, NumMatrix &) { return -a; }}},
+                {"det",    {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.det()); }}},
+                {"rank",   {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.rank()); }}},
+                {"trace",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.trace()); }}},
+                {"t",      {1, [](NumMatrix &a, NumMatrix &) { return a.transposed(); }}},
+                {"inv",    {1, [](NumMatrix &a, NumMatrix &) { return a.inverted(); }}},
+                {"id",     {1, [](NumMatrix &a, NumMatrix &) {
                     assert(a.width() == 1 && a.height() == 1);
                     return NumMatrix::identity(abs(int(a[0][0].numerator())));
-                }}}
+                }}},
+                {"=",      {2, [](NumMatrix &a, NumMatrix &b) { return NumMatrix::fromNumber(a == b); }}},
+                {"width",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.width()); }}},
+                {"height", {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.height()); }}},
         };
 
 void processOp(string op, vector<NumMatrix> &st)
