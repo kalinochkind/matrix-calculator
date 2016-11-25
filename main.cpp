@@ -202,7 +202,7 @@ void f_expr()
             case TOKEN_COMMA:
                 while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
                 {
-                    processOp(opst.back().second, st);
+                    st_size -= operations[opst.back().second].first - 1;
                     opst.pop_back();
                 }
                 if (opst.empty() || st_size <= 0)
