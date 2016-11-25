@@ -18,7 +18,7 @@ string safeGetline()
     return s;
 }
 
-NumMatrix getMatrix(string prompt = "Enter the matrix:")
+NumMatrix getMatrix(string prompt)
 {
     string s, sum;
     cout << prompt << endl;
@@ -51,115 +51,94 @@ NumMatrix getMatrix(string prompt = "Enter the matrix:")
     return m;
 }
 
-void f_rank()
+NumMatrix f_solve(vector<NumMatrix> a)
 {
-    NumMatrix a = getMatrix();
-    cout << "Rank: " << a.rank() << endl;
-}
-
-void f_det()
-{
-    NumMatrix a = getMatrix();
-    cout << "Determinant: " << a.det() << endl;
-}
-
-void f_inv()
-{
-    NumMatrix a = getMatrix();
-    cout << "Inverted matrix:\n" << a.inverted();
-}
-
-void f_mul()
-{
-    NumMatrix a = getMatrix("First matrix:");
-    NumMatrix b = getMatrix("Second matrix:");
-    cout << "Product:\n" << (a * b);
-}
-
-void f_solve()
-{
-    NumMatrix a = getMatrix();
-    unsigned sz = a.height();
-    if (!sz || a.width() != sz + 1)
+    unsigned sz = a[0].height();
+    if (!sz || a[0].width() != sz + 1)
     {
-        cout << "Invalid matrix\n";
-        return;
+        cout << "Invalid use of solve: N*N+1 matrix required\n";
+        exit(1);
     }
-    NumMatrix sys = a.submatrix(0, 0, sz - 1, sz - 1);
-    NumMatrix right = a.submatrix(0, sz, sz - 1, sz);
+    NumMatrix sys = a[0].submatrix(0, 0, sz - 1, sz - 1);
+    NumMatrix right = a[0].submatrix(0, sz, sz - 1, sz);
     sys.inverseExt(right);
-    cout << "Solution:";
-    for (unsigned i = 0; i < sz; ++i)
-    {
-        cout << ' ' << right[i][0];
-    }
-    cout << endl;
+    return right.transposed();
 
 }
 
-void f_pow()
-{
-    NumMatrix a = getMatrix();
-    if (a.width() != a.height())
-    {
-        cout << "This can be done only for square matrices" << endl;
-        return;
-    }
-    cout << "Power: ";
-    unsigned p;
-    cin >> p;
-    NumMatrix t = a.power(p);
-    cout << "Result:\n" << t;
-}
-
-map<string, pair<int, NumMatrix (*)(NumMatrix &, NumMatrix &)> > operations =
+map<string, pair<int, NumMatrix (*)(vector<NumMatrix>)> > operations =
         {
-                {"+",      {2, [](NumMatrix &a, NumMatrix &b) { return a + b; }}},
-                {"^",      {2, [](NumMatrix &a, NumMatrix &b) {
-                    assert(b.width() == 1 && b.height() == 1);
-                    return a.power(int(b[0][0].numerator()));
+                {"+",      {2, [](vector<NumMatrix> a) { return a[0] + a[1]; }}},
+                {"^",      {2, [](vector<NumMatrix> a) {
+                    if(a[1].width() != 1 || a[1].height() != 1 || a[1][0][0].denominator() != 1)
+                    {
+                        cout << "Invalid use of ^: integer required\n";
+                        exit(0);
+                    }
+                    return a[0].power(int(a[1][0][0].numerator()));
                 }}},
-                {"*",      {2, [](NumMatrix &a, NumMatrix &b) {
-                    if (a.height() == 1 && a.width() == 1)
-                        return b * a[0][0];
-                    else if (b.height() == 1 && b.width() == 1)
-                        return a * b[0][0];
+                {"*",      {2, [](vector<NumMatrix>a) {
+                    if (a[0].height() == 1 && a[0].width() == 1)
+                        return a[1] * a[0][0][0];
+                    else if (a[1].height() == 1 && a[1].width() == 1)
+                        return a[0] * a[1][0][0];
                     else
-                        return a * b;
+                        return a[0] * a[1];
                 }}},
-                {"-",      {2, [](NumMatrix &a, NumMatrix &b) { return a - b; }}},
-                {"_",      {1, [](NumMatrix &a, NumMatrix &) { return -a; }}},
-                {"det",    {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.det()); }}},
-                {"rank",   {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.rank()); }}},
-                {"trace",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.trace()); }}},
-                {"t",      {1, [](NumMatrix &a, NumMatrix &) { return a.transposed(); }}},
-                {"inv",    {1, [](NumMatrix &a, NumMatrix &) { return a.inverted(); }}},
-                {"id",     {1, [](NumMatrix &a, NumMatrix &) {
-                    assert(a.width() == 1 && a.height() == 1);
-                    return NumMatrix::identity(abs(int(a[0][0].numerator())));
+                {"-",      {2, [](vector<NumMatrix> a) { return a[0] - a[1]; }}},
+                {"_",      {1, [](vector<NumMatrix> a) { return -a[0]; }}},
+                {"det",    {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].det()); }}},
+                {"rank",   {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].rank()); }}},
+                {"trace",  {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].trace()); }}},
+                {"t",      {1, [](vector<NumMatrix> a) { return a[0].transposed(); }}},
+                {"inv",    {1, [](vector<NumMatrix> a) { return a[0].inverted(); }}},
+                {"id",     {1, [](vector<NumMatrix> a) {
+                    assert(a[0].width() == 1 && a[0].height() == 1);
+                    return NumMatrix::identity(abs(int(a[0][0][0].numerator())));
                 }}},
-                {"=",      {2, [](NumMatrix &a, NumMatrix &b) { return NumMatrix::fromNumber(a == b); }}},
-                {"width",  {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.width()); }}},
-                {"height", {1, [](NumMatrix &a, NumMatrix &) { return NumMatrix::fromNumber(a.height()); }}},
+                {"=",      {2, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0] == a[1]); }}},
+                {"width",  {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].width()); }}},
+                {"height", {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].height()); }}},
+                {"solve", {1, f_solve}},
+                {"at", {3, [](vector<NumMatrix> a) {
+                        if(a[1].width() != 1 || a[1].height() != 1 || a[2].width() != 1 || a[2].height() != 1)
+                        {
+                            cout << "Invalid use of at\n";
+                            exit(1);
+                        }
+                        if(a[1][0][0].denominator() != 1 || a[2][0][0].denominator() != 1)
+                        {
+                            cout << "at: indices must be integers\n";
+                            exit(1);
+                        }
+                        if(a[1][0][0] < 0 || a[1][0][0] >= a[0].height() || a[2][0][0] < 0 || a[2][0][0] >= a[0].width())
+                        {
+                            cout << "at: out of range\n";
+                            exit(1);
+                        }
+                        return NumMatrix::fromNumber(a[0][int(a[1][0][0].numerator())][int(a[2][0][0].numerator())]);
+                    }}}
         };
 
 void processOp(string op, vector<NumMatrix> &st)
 {
-    if (!operations.count(op))
-    {
-        cout << "Invalid function: " << op << endl;
-        exit(1);
-    }
-    assert(int(st.size()) >= operations[op].first);
     if (operations[op].first == 1)
     {
-        st.back() = operations[op].second(st.back(), st.back());
+        st.back() = operations[op].second({st.back()});
+    }
+    else if(operations[op].first == 2)
+    {
+        NumMatrix a = st.back();
+        st.pop_back();
+        st.back() = operations[op].second({st.back(), a});
     }
     else
     {
         NumMatrix a = st.back();
         st.pop_back();
-        st.back() = operations[op].second(st.back(), a);
+        NumMatrix b = st.back();
+        st.pop_back();
+        st.back() = operations[op].second({st.back(), b, a});
     }
 }
 
@@ -171,13 +150,91 @@ void f_expr()
     map<char, NumMatrix> mmap;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
+    int st_size = 0;
+    for (pair<token_type, string> &i : v)
+    {
+        switch (i.first)
+        {
+            case TOKEN_NUMBER:
+            case TOKEN_MATRIX:
+                ++st_size;
+                break;
+            case TOKEN_OP:
+                while (opst.size() && opst.back().first == TOKEN_OP &&
+                       priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
+                       priority[int(opst.back().second[0])])
+                {
+                    st_size -= operations[opst.back().second].first - 1;
+                    opst.pop_back();
+                }
+                if(st_size <= 0)
+                {
+                    std::cout << "Invalid expression" << endl;
+                    exit(1);
+                }
+            case TOKEN_FUNC:
+                if(!operations.count(i.second))
+                {
+                    cout << "Invalid function: " << i.second << endl;
+                    exit(1);
+                }
+            case TOKEN_LEFTPAR:
+                opst.push_back(i);
+                break;
+            case TOKEN_RIGHTPAR:
+                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                {
+                    st_size -= operations[opst.back().second].first - 1;
+                    opst.pop_back();
+                }
+                if (opst.empty() || st_size <= 0)
+                {
+                    cout << "Invalid expression" << endl;
+                    exit(1);
+                }
+                opst.pop_back();
+                if (opst.size() && opst.back().first == TOKEN_FUNC)
+                {
+                    st_size -= operations[opst.back().second].first - 1;
+                    opst.pop_back();
+                }
+                break;
+            case TOKEN_COMMA:
+                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                {
+                    processOp(opst.back().second, st);
+                    opst.pop_back();
+                }
+                if (opst.empty() || st_size <= 0)
+                {
+                    cout << "Invalid expression" << endl;
+                    exit(1);
+                }
+                break;
+        }
+    }
+    while (opst.size())
+    {
+        if (opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
+        {
+            cout << "Invalid expression" << endl;
+            exit(1);
+        }
+        st_size -= operations[opst.back().second].first - 1;
+        opst.pop_back();
+    }
+    if(st_size != 1)
+    {
+        cout << "Invalid expression" << endl;
+        exit(1);
+    }
     for (pair<token_type, string> &i : v)
     {
         NumMatrix tt(1, 1);
         switch (i.first)
         {
             case TOKEN_NUMBER:
-                tt[0][0] = BigInteger(i.second);
+                tt[0][0] = Rational(i.second);
                 st.push_back(tt);
                 break;
             case TOKEN_MATRIX:
@@ -203,13 +260,15 @@ void f_expr()
                     processOp(opst.back().second, st);
                     opst.pop_back();
                 }
-                if (opst.empty())
-                {
-                    cout << "Invalid expression" << endl;
-                    exit(1);
-                }
                 opst.pop_back();
                 if (opst.size() && opst.back().first == TOKEN_FUNC)
+                {
+                    processOp(opst.back().second, st);
+                    opst.pop_back();
+                }
+                break;
+            case TOKEN_COMMA:
+                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
                 {
                     processOp(opst.back().second, st);
                     opst.pop_back();
@@ -219,61 +278,16 @@ void f_expr()
     }
     while (opst.size())
     {
-        if (opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
-        {
-            cout << "Invalid expression" << endl;
-            exit(1);
-        }
         processOp(opst.back().second, st);
         opst.pop_back();
     }
-    if (st.size() == 1)
-        cout << "Result:\n" << st[0];
-    else
-        cout << "Invalid expression\n";
+    cout << "Result:\n" << st[0];
 }
 
 
-map<string, void (*)()> ops = {{"rank",  f_rank},
-                               {"det",   f_det},
-                               {"inv",   f_inv},
-                               {"mul",   f_mul},
-                               {"solve", f_solve},
-                               {"pow",   f_pow}};
-
-void print_help()
+int main()
 {
-    cout << "Usage: matrix [OPERATION]\n\n";
-    cout << "Operations: ";
-    int t = 0;
-    for (auto &i : ops)
-    {
-        cout << (t++ ? ", " : "") << i.first;
-    }
-    cout << endl << endl;
-}
 
-int main(int argc, char **argv)
-{
-    if (argc == 1)
-    {
-        f_expr();
-        return 0;
-    }
-    else if (string(argv[1]) == "help")
-    {
-        print_help();
-        return 0;
-    }
-    if (ops[argv[1]])
-    {
-        ops[argv[1]]();
-    }
-    else
-    {
-        cout << "Invalid operation" << endl;
-        print_help();
-        return 1;
-    }
+    f_expr();
     return 0;
 }

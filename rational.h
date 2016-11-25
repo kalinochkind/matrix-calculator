@@ -520,6 +520,9 @@ const BigInteger gcd(BigInteger a, BigInteger b)
     return d * (a ? a : b);
 }
 
+class Rational;
+const Rational operator+(const Rational &a, const Rational &b);
+
 class Rational
 {
 private:
@@ -553,6 +556,38 @@ public:
     Rational(const BigInteger &a, const BigInteger &b): _numerator(a), _denominator(b)
     {
         normalize();
+    }
+
+    explicit Rational(const std::string &s): _numerator(), _denominator()
+    {
+        size_t i = 0;
+        std::string s1, s2;
+        for (; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
+        {
+            s1.push_back(s[i]);
+        }
+        if (i >= s.size())
+        {
+            *this = Rational(BigInteger(s1));
+            return;
+        }
+        char c = s[i++];
+        for (; i < s.size(); ++i)
+        {
+            s2.push_back(s[i]);
+        }
+        if (c == '/')
+        {
+            *this = Rational(BigInteger(s1), BigInteger(s2));
+            return;
+        }
+        else
+        {
+            Rational fr = Rational(BigInteger(s2), BigInteger('1' + std::string(s2.size(), '0')));
+            if (s1.size() && s1[0] == '-')
+                fr = -fr;
+            *this = Rational(BigInteger(s1)) + fr;
+        }
     }
 
     compare_t compare(const Rational &a) const
@@ -729,33 +764,7 @@ std::istream &operator>>(std::istream &in, Rational &a)
 {
     std::string s;
     in >> s;
-    size_t i = 0;
-    std::string s1, s2;
-    for (; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
-    {
-        s1.push_back(s[i]);
-    }
-    if (i >= s.size())
-    {
-        a = Rational(BigInteger(s1));
-        return in;
-    }
-    char c = s[i++];
-    for (; i < s.size(); ++i)
-    {
-        s2.push_back(s[i]);
-    }
-    if (c == '/')
-    {
-        a = Rational(BigInteger(s1), BigInteger(s2));
-    }
-    else
-    {
-        Rational fr = Rational(BigInteger(s2), BigInteger('1' + std::string(s2.size(), '0')));
-        if (s1.size() && s1[0] == '-')
-            fr = -fr;
-        a = Rational(BigInteger(s1)) + fr;
-    }
+    a = Rational(s);
     return in;
 }
 

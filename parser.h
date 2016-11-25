@@ -6,7 +6,7 @@
 
 enum token_type
 {
-    TOKEN_MATRIX, TOKEN_OP, TOKEN_FUNC, TOKEN_NUMBER, TOKEN_LEFTPAR, TOKEN_RIGHTPAR
+    TOKEN_MATRIX, TOKEN_OP, TOKEN_FUNC, TOKEN_NUMBER, TOKEN_LEFTPAR, TOKEN_RIGHTPAR, TOKEN_COMMA
 };
 
 int priority[128];
@@ -65,7 +65,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if (num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
-            if (last == TOKEN_LEFTPAR || last == TOKEN_OP)
+            if (last == TOKEN_LEFTPAR || last == TOKEN_OP || last == TOKEN_COMMA)
             {
                 ans.push_back({TOKEN_OP, "_"});  // unary
             }
@@ -75,7 +75,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             }
             last = TOKEN_OP;
         }
-        else if ('0' <= i && i <= '9')
+        else if (('0' <= i && i <= '9') || i == '/' || i == '.')
         {
             if (func.size())
                 ans.push_back({TOKEN_FUNC, func});
@@ -90,6 +90,16 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             num = "";
             func.push_back(i);
             last = TOKEN_FUNC;
+        }
+        else if(i == ',')
+        {
+            if (func.size())
+                ans.push_back({TOKEN_FUNC, func});
+            if (num.size())
+                ans.push_back({TOKEN_NUMBER, num});
+            num = func = "";
+            ans.push_back({TOKEN_COMMA, ""});
+            last = TOKEN_COMMA;
         }
         else
         {
