@@ -8,6 +8,12 @@
 
 using namespace std;
 
+void die(const string &s)
+{
+    cout << s << endl;
+    exit(1);
+}
+
 string safeGetline()
 {
     string s;
@@ -38,10 +44,7 @@ NumMatrix getMatrix(string prompt)
         if (!cwidth)
             break;
         if (width && width != cwidth)
-        {
-            cout << "Incorrect matrix\n";
-            exit(1);
-        }
+            die("Incorrect matrix");
         width = cwidth;
         ++height;
         sum += s + ' ';
@@ -59,10 +62,7 @@ NumMatrix f_solve(vector<NumMatrix> a)
 {
     unsigned sz = a[0].height();
     if (!sz || a[0].width() != sz + 1)
-    {
-        cout << "Invalid use of solve: N*N+1 matrix required\n";
-        exit(1);
-    }
+        die("Invalid use of solve: N*N+1 matrix required");
     NumMatrix sys = a[0].submatrix(0, 0, sz - 1, sz - 1);
     NumMatrix right = a[0].submatrix(0, sz, sz - 1, sz);
     sys.inverseExt(right);
@@ -103,10 +103,7 @@ void f_expr()
                     {"+",      {2, [](vector<NumMatrix> a) { return a[0] + a[1]; }}},
                     {"^",      {2, [](vector<NumMatrix> a) {
                         if (a[1].width() != 1 || a[1].height() != 1 || a[1][0][0] != int(a[1][0][0]))
-                        {
-                            cout << "Invalid use of ^: integer required\n";
-                            exit(0);
-                        }
+                            die("Invalid use of ^: integer required");
                         return a[0].power(int(a[1][0][0]));
                     }}},
                     {"*",      {2, [](vector<NumMatrix> a) {
@@ -134,10 +131,7 @@ void f_expr()
                     {"inv",    {1, [](vector<NumMatrix> a) { return a[0].inverted(); }}},
                     {"id",     {1, [](vector<NumMatrix> a) {
                         if (a[0].width() != 1 || a[0].height() == 1)
-                        {
-                            cout << "Invalid use of id\n";
-                            exit(1);
-                        }
+                            die("Invalid use of id");
                         return NumMatrix::identity(abs(int(a[0][0][0])));
                     }}},
                     {"=",      {2, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0] == a[1]); }}},
@@ -146,21 +140,12 @@ void f_expr()
                     {"solve",  {1, f_solve}},
                     {"at",     {3, [](vector<NumMatrix> a) {
                         if (a[1].width() != 1 || a[1].height() != 1 || a[2].width() != 1 || a[2].height() != 1)
-                        {
-                            cout << "Invalid use of at\n";
-                            exit(1);
-                        }
+                            die("Invalid use of at");
                         if (int(a[1][0][0]) != a[1][0][0] || int(a[2][0][0]) != a[2][0][0])
-                        {
-                            cout << "at: indices must be integers\n";
-                            exit(1);
-                        }
+                            die("at: indices must be integers");
                         if (int(a[1][0][0]) < 0 || int(a[1][0][0]) >= int(a[0].height()) ||
                             int(a[2][0][0]) < 0 || int(a[2][0][0]) >= int(a[0].width()))
-                        {
-                            cout << "at: out of range\n";
-                            exit(1);
-                        }
+                            die("at: out of range");
                         return NumMatrix::fromNumber(a[0][int(a[1][0][0])][int(a[2][0][0])]);
                     }}}
             };
@@ -188,16 +173,10 @@ void f_expr()
                     opst.pop_back();
                 }
                 if (st_size <= 0)
-                {
-                    std::cout << "Invalid expression" << endl;
-                    exit(1);
-                }
+                    die("Invalid expression");
             case TOKEN_FUNC:
                 if (!operations.count(i.second))
-                {
-                    cout << "Invalid function: " << i.second << endl;
-                    exit(1);
-                }
+                    die("Invalid function: " + i.second);
             case TOKEN_LEFTPAR:
                 opst.push_back(i);
                 break;
@@ -208,10 +187,7 @@ void f_expr()
                     opst.pop_back();
                 }
                 if (opst.empty() || st_size <= 0)
-                {
-                    cout << "Invalid expression" << endl;
-                    exit(1);
-                }
+                    die("Invalid expression");
                 opst.pop_back();
                 if (opst.size() && opst.back().first == TOKEN_FUNC)
                 {
@@ -226,28 +202,19 @@ void f_expr()
                     opst.pop_back();
                 }
                 if (opst.empty() || st_size <= 0)
-                {
-                    cout << "Invalid expression" << endl;
-                    exit(1);
-                }
+                    die("Invalid expression");
                 break;
         }
     }
     while (opst.size())
     {
         if (opst.back().first == TOKEN_LEFTPAR || opst.back().first == TOKEN_RIGHTPAR)
-        {
-            cout << "Invalid expression" << endl;
-            exit(1);
-        }
+            die("Invalid expression");
         st_size -= operations[opst.back().second].first - 1;
         opst.pop_back();
     }
     if (st_size != 1)
-    {
-        cout << "Invalid expression" << endl;
-        exit(1);
-    }
+        die("Invalid expression");
     for (pair<token_type, string> &i : v)
     {
         NumMatrix tt(1, 1);
@@ -318,12 +285,14 @@ int main(int argc, char **argv)
         else
         {
             _FINITE_ORDER = atoi(argv[1]);
+            if(_FINITE_ORDER < 2)
+                die("Order must be at least 2");
             f_expr<Finite>();
         }
     }
-    catch(matrix_error e)
+    catch (matrix_error e)
     {
-        cout << "Matrix error: " <<  e.what() << endl;
+        cout << "Matrix error: " << e.what() << endl;
         return 1;
     }
     return 0;
