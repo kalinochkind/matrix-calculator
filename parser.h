@@ -17,6 +17,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
     priority[int('+')] = 0;
     priority[int('-')] = 0;
     priority[int('*')] = 1;
+    priority[int('/')] = 1;
     priority[int('^')] = 2;
     priority[int('_')] = 3;
     priority[int('=')] = -1;
@@ -39,7 +40,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             ans.push_back({TOKEN_MATRIX, std::string() + i});
             last = TOKEN_MATRIX;
         }
-        else if (i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=')
+        else if (i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=' || i == '/')
         {
             if (func.size())
                 ans.push_back({TOKEN_FUNC, func});
@@ -75,7 +76,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             }
             last = TOKEN_OP;
         }
-        else if (('0' <= i && i <= '9') || i == '/' || i == '.')
+        else if (('0' <= i && i <= '9') || i == '.')
         {
             if (func.size())
                 ans.push_back({TOKEN_FUNC, func});

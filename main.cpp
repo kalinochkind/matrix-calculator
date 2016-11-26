@@ -85,6 +85,14 @@ map<string, pair<int, NumMatrix (*)(vector<NumMatrix>)> > operations =
                     else
                         return a[0] * a[1];
                 }}},
+                {"/",      {2, [](vector<NumMatrix>a) {
+                    if (a[0].height() == 1 && a[0].width() == 1)
+                        return a[1].inverted() * a[0][0][0];
+                    else if (a[1].height() == 1 && a[1].width() == 1)
+                        return a[0] * a[1].inverted()[0][0];
+                    else
+                        return a[0] * a[1].inverted();
+                }}},
                 {"-",      {2, [](vector<NumMatrix> a) { return a[0] - a[1]; }}},
                 {"_",      {1, [](vector<NumMatrix> a) { return -a[0]; }}},
                 {"det",    {1, [](vector<NumMatrix> a) { return NumMatrix::fromNumber(a[0].det()); }}},
