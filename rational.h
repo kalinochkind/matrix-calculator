@@ -627,6 +627,11 @@ public:
         return double(_numerator) / double(_denominator);
     }
 
+    explicit operator int() const
+    {
+        return int(_numerator);
+    }
+
     const Rational operator+() const
     {
         return *this;

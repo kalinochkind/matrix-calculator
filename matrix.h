@@ -552,8 +552,6 @@ std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
     return out;
 };
 
-typedef Matrix<Rational> NumMatrix;
-
 template<class Field>
 std::istream &operator>>(std::istream &in, Matrix<Field> &a)
 {
