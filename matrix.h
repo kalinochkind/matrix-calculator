@@ -463,7 +463,7 @@ public:
         return N;
     }
 
-    const Matrix submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2)
+    const Matrix submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2) const
     {
         if (x1 > x2)
             std::swap(x1, x2);
@@ -516,7 +516,7 @@ public:
         }
     }
 
-    const Matrix power(int pow)
+    const Matrix power(int pow) const
     {
         if (M != N)
             throw matrix_error("Power is only defined for square matrices");
