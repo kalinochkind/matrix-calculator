@@ -151,6 +151,48 @@ struct _NumMatrix
 
 };
 
+Matrix<Finite> f_cfrac(Finite a)
+{
+    return Matrix<Finite>::fromNumber(a);
+}
+
+Matrix<Rational> f_cfrac(Rational a)
+{
+    std::vector<Rational> ans = {0};
+    if(a < 0)
+    {
+        ans[0] -= (-a.numerator() / a.denominator()) + 1;
+        a += (-a.numerator() / a.denominator()) + 1;
+    }
+    ans[0] += (a.numerator() / a.denominator());
+    a -= (a.numerator() / a.denominator());
+    while(a.denominator() != 1)
+    {
+        a = 1 / a;
+        ans.push_back(a.numerator() / a.denominator());
+        a -= (a.numerator() / a.denominator());
+    }
+    Matrix<Rational> res(1, ans.size());
+    for(unsigned i=0;i<ans.size();++i)
+    {
+        res[0][i] = ans[i];
+    }
+    return res;
+}
+
+
+template<class T>
+T f_revcfrac(const Matrix<T> &a)
+{
+    T res = a[0][a.width()-1];
+    for(int i=int(a.width())-2;i>=0;--i)
+    {
+        res = T(1)/res + a[0][i];
+    }
+    return res;
+}
+
+
 template<class Field>
 void f_expr()
 {
@@ -213,7 +255,19 @@ void f_expr()
                         if(a[0]->fm.width() != 1 || a[0]->fm.height() != 1)
                             die("int: matrix 1*1 required");
                         return NumMatrix(int(a[0]->fm[0][0]));
-                    }}}
+                    }}},
+                    {"cfrac",    {1, [](const vector<NumMatrix *> &a) {
+                        auto m = a[0]->toMatrix();
+                        if(m.width() != 1 || m.height() != 1)
+                            die("cfrac: matrix 1*1 required");
+                        return NumMatrix(f_cfrac(m[0][0]));
+                    }}},
+                    {"rcfrac",    {1, [](const vector<NumMatrix *> &a) {
+                        auto m = a[0]->toMatrix();
+                        if(m.height() != 1 || !m.width())
+                            die("revcfrac: matrix 1*n required");
+                        return NumMatrix(f_revcfrac(m));
+                    }}},
             };
     cout << "Expression: ";
     string s = safeGetline();
@@ -238,7 +292,7 @@ void f_expr()
                     st_size -= operations[opst.back().second].first - 1;
                     opst.pop_back();
                 }
-                if (st_size <= 0)
+                if (st_size < 0)
                     die("Invalid expression");
             case TOKEN_FUNC:
                 if (!operations.count(i.second))
