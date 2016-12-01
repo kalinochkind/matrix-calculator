@@ -222,7 +222,7 @@ public:
             res *= BLOCK_MOD;
             res += i;
         }
-        return res;
+        return negative ? -res : res;
     }
 
     explicit operator int() const
@@ -521,6 +521,7 @@ const BigInteger gcd(BigInteger a, BigInteger b)
 }
 
 class Rational;
+
 const Rational operator+(const Rational &a, const Rational &b);
 
 class Rational
@@ -629,7 +630,9 @@ public:
 
     explicit operator int() const
     {
-        return int(_numerator);
+        if (_denominator == 1)
+            return int(_numerator);
+        return int(double(*this));
     }
 
     const Rational operator+() const

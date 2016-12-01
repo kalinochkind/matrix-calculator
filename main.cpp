@@ -84,43 +84,25 @@ void processOp(string op, vector<NumMatrix> &st,
 template<class Field>
 struct _NumMatrix
 {
-    union
-    {
-        int im;
-        Matrix<Field> fm;
-    };
+    int im;
+    Matrix<Field> fm;
     bool is_int;
 
-    _NumMatrix(): im(0), is_int(true) {}
+    _NumMatrix(): im(0), fm(), is_int(true) {}
 
-    _NumMatrix(const _NumMatrix &a): is_int(a.is_int)
-    {
-        if (is_int)
-            im = a.im;
-        else
-        {
-            new(&fm) Matrix<Field>();
-            fm = a.fm;
-        }
-    }
+    _NumMatrix(const _NumMatrix &a): im(a.im), fm(a.fm), is_int(a.is_int) {}
 
-    _NumMatrix(int a): im(a), is_int(true) {}
+    _NumMatrix(int a): im(a), fm(), is_int(true) {}
 
-    _NumMatrix(const Matrix<Field> &a): fm(a), is_int(false) {}
+    _NumMatrix(const Matrix<Field> &a): im(0), fm(a), is_int(false) {}
 
-    _NumMatrix(const Field &a): fm(Matrix<Field>::fromNumber(a)), is_int(false) {}
+    _NumMatrix(const Field &a): im(0), fm(Matrix<Field>::fromNumber(a)), is_int(false) {}
 
     _NumMatrix &operator=(const _NumMatrix &a)
     {
-        if(this == &a)
-            return *this;
-        if(!is_int && a.is_int)
-            fm.~Matrix();
         is_int = a.is_int;
-        if(is_int)
-            im = a.im;
-        else
-            fm = a.fm;
+        im = a.im;
+        fm = a.fm;
         return *this;
     }
 
@@ -130,12 +112,6 @@ struct _NumMatrix
             return Matrix<Field>::fromNumber(Field(im));
         else
             return fm;
-    }
-
-    ~_NumMatrix()
-    {
-        if (!is_int)
-            fm.~Matrix();
     }
 
     _NumMatrix operator*(const _NumMatrix &m) const
@@ -198,8 +174,12 @@ void f_expr()
                     {"det",    {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().det()); }}},
                     {"rank",   {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().rank()); }}},
                     {"trace",  {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().trace()); }}},
-                    {"t",      {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().transposed()); }}},
-                    {"inv",    {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().inverted()); }}},
+                    {"t",      {1, [](const vector<NumMatrix *> &a) {
+                        return NumMatrix(a[0]->toMatrix().transposed());
+                    }}},
+                    {"inv",    {1, [](const vector<NumMatrix *> &a) {
+                        return NumMatrix(a[0]->toMatrix().inverted());
+                    }}},
                     {"id",     {1, [](const vector<NumMatrix *> &a) {
                         if (!a[1]->is_int)
                             die("Invalid use of id");
@@ -226,6 +206,13 @@ void f_expr()
                             a[2]->im < 0 || a[2]->im >= int(a[0]->toMatrix().width()))
                             die("at: out of range");
                         return NumMatrix(a[0]->toMatrix()[a[1]->im][a[2]->im]);
+                    }}},
+                    {"int",    {1, [](const vector<NumMatrix *> &a) {
+                        if (a[0]->is_int)
+                            return *a[0];
+                        if(a[0]->fm.width() != 1 || a[0]->fm.height() != 1)
+                            die("int: matrix 1*1 required");
+                        return NumMatrix(int(a[0]->fm[0][0]));
                     }}}
             };
     cout << "Expression: ";
@@ -303,7 +290,7 @@ void f_expr()
             case TOKEN_NUMBER:
                 is.str(i.second);
                 is >> tt;
-                if(tt == int(tt))
+                if (tt == int(tt))
                     st.push_back(NumMatrix(int(tt)));
                 else
                 {
