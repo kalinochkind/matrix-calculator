@@ -534,12 +534,57 @@ public:
             t.inverse();
         return t;
     }
+
+    const Matrix joinHorizontal(const Matrix &a) const
+    {
+        if (M != a.M)
+        {
+            throw matrix_error("Trying to join matrices of different height");
+        }
+        Matrix res(M, N + a.N);
+        for (unsigned i = 0; i < M; i++)
+        {
+            for (unsigned j = 0; j < N; j++)
+            {
+                res[i][j] = (*this)[i][j];
+            }
+            for (unsigned j = 0; j < a.N; j++)
+            {
+                res[i][N + j] = a[i][j];
+            }
+        }
+        return res;
+    }
+
+    const Matrix joinVertical(const Matrix &a) const
+    {
+        if (N != a.N)
+        {
+            throw matrix_error("Trying to join matrices of different width");
+        }
+        Matrix res(M + a.M, N);
+        for (unsigned i = 0; i < M; i++)
+        {
+            for (unsigned j = 0; j < N; j++)
+            {
+                res[i][j] = (*this)[i][j];
+            }
+        }
+        for (unsigned i = 0; i < a.M; i++)
+        {
+            for (unsigned j = 0; j < N; j++)
+            {
+                res[M + i][j] = a[i][j];
+            }
+        }
+        return res;
+    }
 };
 
 template<class Field>
 std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
-    if(!a.width() || !a.height())
+    if (!a.width() || !a.height())
         return out;
     for (unsigned i = 0; i < a.height(); ++i)
     {
