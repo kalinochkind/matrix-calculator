@@ -344,70 +344,76 @@ void f_expr()
     }
     if (st_size != 1)
         die("Invalid expression");
-    for (pair<token_type, string> &i : v)
+    do
     {
-        Rational tt;
-        istringstream is, iis;
-        switch (i.first)
+        mmap.clear();
+        for (pair<token_type, string> &i : v)
         {
-            case TOKEN_NUMBER:
-                is.str(i.second);
-                is >> tt;
-                if (tt == int(tt))
-                    st.push_back(NumMatrix(int(tt)));
-                else
-                {
-                    Field tf;
-                    iis.str(i.second);
-                    iis >> tf;
-                    st.push_back(NumMatrix(tf));
-                }
-                break;
-            case TOKEN_MATRIX:
-                if (!mmap.count(i.second[0]))
-                    mmap[i.second[0]] = getMatrix<Matrix<Field>>(string("Matrix ") + i.second + ':');
-                st.push_back(mmap[i.second[0]]);
-                break;
-            case TOKEN_OP:
-                while (opst.size() && opst.back().first == TOKEN_OP &&
-                       priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
-                       priority[int(opst.back().second[0])])
-                {
-                    processOp(opst.back().second, st, operations);
+            Rational tt;
+            istringstream is, iis;
+            switch (i.first)
+            {
+                case TOKEN_NUMBER:
+                    is.str(i.second);
+                    is >> tt;
+                    if (tt == int(tt))
+                        st.push_back(NumMatrix(int(tt)));
+                    else
+                    {
+                        Field tf;
+                        iis.str(i.second);
+                        iis >> tf;
+                        st.push_back(NumMatrix(tf));
+                    }
+                    break;
+                case TOKEN_MATRIX:
+                    if (!mmap.count(i.second[0]))
+                        mmap[i.second[0]] = getMatrix<Matrix<Field>>(string("Matrix ") + i.second + ':');
+                    st.push_back(mmap[i.second[0]]);
+                    break;
+                case TOKEN_OP:
+                    while (opst.size() && opst.back().first == TOKEN_OP &&
+                           priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
+                           priority[int(opst.back().second[0])])
+                    {
+                        processOp(opst.back().second, st, operations);
+                        opst.pop_back();
+                    }
+                case TOKEN_FUNC:
+                case TOKEN_LEFTPAR:
+                    opst.push_back(i);
+                    break;
+                case TOKEN_RIGHTPAR:
+                    while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                    {
+                        processOp(opst.back().second, st, operations);
+                        opst.pop_back();
+                    }
                     opst.pop_back();
-                }
-            case TOKEN_FUNC:
-            case TOKEN_LEFTPAR:
-                opst.push_back(i);
-                break;
-            case TOKEN_RIGHTPAR:
-                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
-                {
-                    processOp(opst.back().second, st, operations);
-                    opst.pop_back();
-                }
-                opst.pop_back();
-                if (opst.size() && opst.back().first == TOKEN_FUNC)
-                {
-                    processOp(opst.back().second, st, operations);
-                    opst.pop_back();
-                }
-                break;
-            case TOKEN_COMMA:
-                while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
-                {
-                    processOp(opst.back().second, st, operations);
-                    opst.pop_back();
-                }
-                break;
+                    if (opst.size() && opst.back().first == TOKEN_FUNC)
+                    {
+                        processOp(opst.back().second, st, operations);
+                        opst.pop_back();
+                    }
+                    break;
+                case TOKEN_COMMA:
+                    while (opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                    {
+                        processOp(opst.back().second, st, operations);
+                        opst.pop_back();
+                    }
+                    break;
+            }
         }
+        while (opst.size())
+        {
+            processOp(opst.back().second, st, operations);
+            opst.pop_back();
+        }
+        cout << "Result:\n" << st[0].toMatrix();
     }
-    while (opst.size())
-    {
-        processOp(opst.back().second, st, operations);
-        opst.pop_back();
-    }
-    cout << "Result:\n" << st[0].toMatrix();
+    while(!mmap.empty());
+
 }
 
 
