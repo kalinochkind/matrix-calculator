@@ -6,7 +6,7 @@
 
 enum token_type
 {
-    TOKEN_MATRIX, TOKEN_OP, TOKEN_FUNC, TOKEN_NUMBER, TOKEN_LEFTPAR, TOKEN_RIGHTPAR, TOKEN_COMMA
+    TOKEN_MATRIX, TOKEN_OP, TOKEN_FUNC, TOKEN_NUMBER, TOKEN_LEFTPAR, TOKEN_RIGHTPAR, TOKEN_COMMA, TOKEN_DOLLAR
 };
 
 int priority[128];
@@ -101,6 +101,16 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             num = func = "";
             ans.push_back({TOKEN_COMMA, ""});
             last = TOKEN_COMMA;
+        }
+        else if(i == '$')
+        {
+            if (func.size())
+                ans.push_back({TOKEN_FUNC, func});
+            if (num.size())
+                ans.push_back({TOKEN_NUMBER, num});
+            num = func = "";
+            ans.push_back({TOKEN_DOLLAR, ""});
+            last = TOKEN_DOLLAR;
         }
         else
         {

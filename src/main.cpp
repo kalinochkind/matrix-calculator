@@ -3,6 +3,7 @@
 #include "finite.h"
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <cstdlib>
 
@@ -20,6 +21,11 @@ string safeGetline()
     while (s.empty())
     {
         getline(cin, s);
+        if(cin.eof())
+        {
+            cout << "\n";
+            exit(0);
+        }
         while (s.size() && isspace(s.back()))
             s.pop_back();
     }
@@ -44,11 +50,13 @@ FMatrix getMatrix(string prompt)
         if (!cwidth)
             break;
         if (width && width != cwidth)
-            die("Incorrect matrix");
+            throw matrix_error("Incorrect matrix");
         width = cwidth;
         ++height;
         sum += s + ' ';
         getline(cin, s);
+        if(cin.eof())
+            exit(0);
     }
     FMatrix m(height, width);
     istringstream is;
@@ -282,15 +290,22 @@ void f_expr()
     string s = safeGetline();
     auto v = splitExpression(s);
     map<char, NumMatrix> mmap;
+    set<char> repeated;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
     int st_size = 0;
+    bool dollar = false;
     for (pair<token_type, string> &i : v)
     {
         switch (i.first)
         {
-            case TOKEN_NUMBER:
+            case TOKEN_DOLLAR:
+                dollar = true;
+                break;
             case TOKEN_MATRIX:
+                if(dollar)
+                    repeated.insert(i.second[0]);
+            case TOKEN_NUMBER:
                 ++st_size;
                 break;
             case TOKEN_OP:
@@ -334,6 +349,8 @@ void f_expr()
                     die("Invalid expression");
                 break;
         }
+        if(i.first != TOKEN_DOLLAR)
+            dollar = false;
     }
     while (opst.size())
     {
@@ -344,15 +361,14 @@ void f_expr()
     }
     if (st_size != 1)
         die("Invalid expression");
+    Rational tt;
     do
     {
         cout << endl;
-        mmap.clear();
         try
         {
             for (pair<token_type, string> &i : v)
             {
-                Rational tt;
                 istringstream is, iis;
                 switch (i.first)
                 {
@@ -406,6 +422,8 @@ void f_expr()
                             opst.pop_back();
                         }
                         break;
+                    case TOKEN_DOLLAR:
+                        ;
                 }
             }
             while (opst.size())
@@ -420,8 +438,13 @@ void f_expr()
             cout << "Error: " << e.what() << endl;
         }
         st.clear();
+        opst.clear();
+        for(char i : repeated)
+        {
+            mmap.erase(i);
+        }
     }
-    while(!mmap.empty());
+    while(!repeated.empty());
 
 }
 
