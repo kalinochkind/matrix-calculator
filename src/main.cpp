@@ -21,7 +21,7 @@ string safeGetline()
     while (s.empty())
     {
         getline(cin, s);
-        if(cin.eof())
+        if (cin.eof())
         {
             cout << "\n";
             exit(0);
@@ -55,7 +55,7 @@ FMatrix getMatrix(string prompt)
         ++height;
         sum += s + ' ';
         getline(cin, s);
-        if(cin.eof())
+        if (cin.eof())
             exit(0);
     }
     FMatrix m(height, width);
@@ -285,6 +285,11 @@ void f_expr()
                     {"joinv",     {2, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().joinVertical(a[1]->toMatrix()));
                     }}},
+                    {"gauss",     {1, [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> m = a[0]->toMatrix();
+                        m.gauss();
+                        return NumMatrix(m);
+                    }}}
             };
     cout << "Expression: ";
     string s = safeGetline();
@@ -303,7 +308,7 @@ void f_expr()
                 dollar = true;
                 break;
             case TOKEN_MATRIX:
-                if(dollar)
+                if (dollar)
                     repeated.insert(i.second[0]);
             case TOKEN_NUMBER:
                 ++st_size;
@@ -349,7 +354,7 @@ void f_expr()
                     die("Invalid expression");
                 break;
         }
-        if(i.first != TOKEN_DOLLAR)
+        if (i.first != TOKEN_DOLLAR)
             dollar = false;
     }
     while (opst.size())
@@ -422,8 +427,7 @@ void f_expr()
                             opst.pop_back();
                         }
                         break;
-                    case TOKEN_DOLLAR:
-                        ;
+                    case TOKEN_DOLLAR:;
                 }
             }
             while (opst.size())
@@ -433,18 +437,17 @@ void f_expr()
             }
             cout << "Result:\n" << st[0].toMatrix();
         }
-        catch(matrix_error e)
+        catch (matrix_error e)
         {
             cout << "Error: " << e.what() << endl;
         }
         st.clear();
         opst.clear();
-        for(char i : repeated)
+        for (char i : repeated)
         {
             mmap.erase(i);
         }
-    }
-    while(!repeated.empty());
+    } while (!repeated.empty());
 
 }
 

@@ -132,61 +132,6 @@ class Matrix
         return res;
     }
 
-    unsigned _gauss(Matrix *ext = nullptr)
-    {
-        if (ext)
-        {
-            assert(M == ext->M);
-        }
-        unsigned row = 0;
-        for (unsigned col = 0; col < N; ++col)
-        {
-            for (unsigned i = row; i < M; ++i)
-            {
-                if ((*this)[i][col])
-                {
-                    if (i != row)
-                    {
-                        for (unsigned j = 0; j < N; ++j)
-                        {
-                            std::swap((*this)[i][j], (*this)[row][j]);
-                            (*this)[i][j] = -(*this)[i][j];
-                        }
-                        if (ext)
-                        {
-                            for (unsigned j = 0; j < ext->N; ++j)
-                            {
-                                std::swap((*ext)[i][j], (*ext)[row][j]);
-                                (*ext)[i][j] = -(*ext)[i][j];
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-            if (!(*this)[row][col])
-            {
-                continue;
-            }
-            for (unsigned i = row + 1; i < M; ++i)
-            {
-                Field coeff = (*this)[i][col] / (*this)[row][col];
-                for (unsigned j = 0; j < N; ++j)
-                {
-                    (*this)[i][j] -= (*this)[row][j] * coeff;
-                }
-                if (ext)
-                {
-                    for (unsigned j = 0; j < ext->N; ++j)
-                        (*ext)[i][j] -= (*ext)[row][j] * coeff;
-                }
-            }
-            ++row;
-        }
-        return row;
-    }
-
-
     const Matrix _multiplyStrassen(const Matrix &m) const
     {
         assert(N == m.M);
@@ -246,6 +191,60 @@ public:
     ~Matrix()
     {
         delete[] arr;
+    }
+
+    unsigned gauss(Matrix *ext = nullptr)
+    {
+        if (ext)
+        {
+            assert(M == ext->M);
+        }
+        unsigned row = 0;
+        for (unsigned col = 0; col < N; ++col)
+        {
+            for (unsigned i = row; i < M; ++i)
+            {
+                if ((*this)[i][col])
+                {
+                    if (i != row)
+                    {
+                        for (unsigned j = 0; j < N; ++j)
+                        {
+                            std::swap((*this)[i][j], (*this)[row][j]);
+                            (*this)[i][j] = -(*this)[i][j];
+                        }
+                        if (ext)
+                        {
+                            for (unsigned j = 0; j < ext->N; ++j)
+                            {
+                                std::swap((*ext)[i][j], (*ext)[row][j]);
+                                (*ext)[i][j] = -(*ext)[i][j];
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!(*this)[row][col])
+            {
+                continue;
+            }
+            for (unsigned i = row + 1; i < M; ++i)
+            {
+                Field coeff = (*this)[i][col] / (*this)[row][col];
+                for (unsigned j = 0; j < N; ++j)
+                {
+                    (*this)[i][j] -= (*this)[row][j] * coeff;
+                }
+                if (ext)
+                {
+                    for (unsigned j = 0; j < ext->N; ++j)
+                        (*ext)[i][j] -= (*ext)[row][j] * coeff;
+                }
+            }
+            ++row;
+        }
+        return row;
     }
 
     static const Matrix identity(unsigned n)
@@ -363,7 +362,7 @@ public:
         if (N != M)
             throw matrix_error("Trying to calculate determinant of a non-square matrix");
         Matrix tmp(*this);
-        if (tmp._gauss() != N)
+        if (tmp.gauss() != N)
             return Field();
         Field ans = tmp[0][0];
         for (unsigned j = 1; j < N; ++j)
@@ -412,7 +411,7 @@ public:
     unsigned rank() const
     {
         Matrix tmp(*this);
-        unsigned a = tmp._gauss();
+        unsigned a = tmp.gauss();
         return a;
     }
 
@@ -488,7 +487,7 @@ public:
         {
             throw matrix_error("Invalid use of inverseExt");
         }
-        if (_gauss(&ext) != N)
+        if (gauss(&ext) != N)
         {
             throw matrix_error("Cannot inverse a singular matrix");
         }
