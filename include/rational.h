@@ -7,6 +7,7 @@
 #include <exception>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 template<class T>
 const std::string toString(const T &a)
@@ -153,6 +154,39 @@ private:
         }
         remainder = static_cast<int>(carry);
         normalize();
+    }
+
+    const BigInteger _divide_long(BigInteger a)
+    {
+        negative = a.negative = false;
+        BigInteger ans;
+        if(_compareAbs(a) < 0)
+            return 0;
+        int shift = 0;
+        while(_compareAbs(a) >= 0)
+        {
+            a.digits.insert(a.digits.begin(), 0);
+            ++shift;
+        }
+        a.digits.erase(a.digits.begin());
+        for(;shift;--shift)
+        {
+            int l = 0, r = BLOCK_MOD;
+            while(l + 1 < r)
+            {
+                int m = (l + r) / 2;
+                if(_compareAbs(a * m) < 0)
+                    r = m;
+                else
+                    l = m;
+            }
+            ans.digits.push_back(l);
+            *this -= a * l;
+            a.digits.erase(a.digits.begin());
+        }
+        std::reverse(ans.digits.begin(), ans.digits.end());
+        ans.normalize();
+        return ans;
     }
 
 public:
@@ -337,26 +371,11 @@ public:
             _divide(a.digits[0], temp);
             return *this;
         }
-        BigInteger l(0);
-        BigInteger r(*this);
-        r.negative = false;
-        ++r;
-        BigInteger m;
-        while ((l + 1)._compareAbs(r) < 0)
-        {
-            m = (l + r) / 2;
-            if (_compareAbs(m * a) >= 0)
-            {
-                l = m;
-            }
-            else
-            {
-                r = m;
-            }
-        }
-        l.negative = a.negative ^ negative;
-        l.normalize();
-        return *this = l;
+        bool neg = a.negative ^ negative;
+        *this = _divide_long(a);
+        negative = neg;
+        normalize();
+        return *this;
     }
 
     BigInteger &operator%=(const BigInteger &a)
