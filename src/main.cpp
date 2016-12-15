@@ -200,6 +200,15 @@ T f_revcfrac(const Matrix<T> &a)
     return res;
 }
 
+void printDecimalResult(const Finite &) {}
+
+void printDecimalResult(const Rational &a)
+{
+    if (a.denominator() == 1)
+        return;
+    cout << "\nDecimal:\n" << a.asDecimal(30) << endl;
+}
+
 
 template<class Field>
 void f_expr()
@@ -435,7 +444,11 @@ void f_expr()
                 processOp(opst.back().second, st, operations);
                 opst.pop_back();
             }
-            cout << "Result:\n" << st[0].toMatrix();
+            auto res = st[0].toMatrix();
+            cout << "Result:\n" << res;
+
+            if (res.width() == 1 && res.height() == 1)
+                printDecimalResult(res[0][0]);
         }
         catch (matrix_error e)
         {

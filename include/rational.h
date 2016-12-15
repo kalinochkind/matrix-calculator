@@ -615,7 +615,7 @@ public:
         return (_numerator * a._denominator - a._numerator * _denominator)._compare(0);
     }
 
-    BigInteger &numerator()
+    const BigInteger numerator() const
     {
         return _numerator;
     }
@@ -626,7 +626,7 @@ public:
         normalize();
     }
 
-    BigInteger &denominator()
+    const BigInteger denominator() const
     {
         return _denominator;
     }
@@ -717,6 +717,8 @@ public:
         }
         if (precision)
             result.insert(result.end() - precision, '.');
+        while(precision && result.back() == '0')
+            result.pop_back();
         if (_numerator < 0)
             result = "-" + result;
         return result;
