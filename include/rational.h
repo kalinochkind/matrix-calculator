@@ -39,6 +39,8 @@ const BigInteger operator/(const BigInteger &a, const BigInteger &b);
 
 const BigInteger operator%(const BigInteger &a, const BigInteger &b);
 
+bool operator==(const BigInteger &a, const BigInteger &b);
+
 std::ostream &operator<<(std::ostream &out, const BigInteger &a);
 
 
@@ -423,7 +425,14 @@ public:
     {
         return digits.size() && digits[0] % 2;
     }
+
+    void swap(BigInteger &a)
+    {
+        digits.swap(a.digits);
+        std::swap(negative, a.negative);
+    }
 };
+
 
 const BigInteger operator+(const BigInteger &a, const BigInteger &b)
 {
@@ -537,6 +546,66 @@ const BigInteger gcd(BigInteger a, BigInteger b)
         }
     }
     return d * (a ? a : b);
+}
+
+
+std::pair<BigInteger, BigInteger> ext_gcd(BigInteger a, BigInteger b)
+{
+    BigInteger u = 1, v = 0, s = 0, t = 1;
+    while(!a.odd() && !b.odd())
+    {
+        a /= 2;
+        b /= 2;
+    }
+    BigInteger alpha = a, beta = b;
+    while(!a.odd())
+    {
+        a /= 2;
+        if(!u.odd() && !b.odd())
+        {
+            u /= 2;
+            v /= 2;
+        }
+        else
+        {
+            u += beta;
+            u /= 2;
+            v -= alpha;
+            v /= 2;
+        }
+    }
+    while(a != b)
+    {
+        if(!b.odd())
+        {
+            b /= 2;
+            if(!s.odd() && !t.odd())
+            {
+                s /= 2;
+                t /= 2;
+            }
+            else
+            {
+                s += beta;
+                s /= 2;
+                t -= alpha;
+                t /= 2;
+            }
+        }
+        else if(b < a)
+        {
+            a.swap(b);
+            u.swap(s);
+            v.swap(t);
+        }
+        else
+        {
+            b -= a;
+            s -= u;
+            t -= v;
+        }
+    }
+    return {s, t};
 }
 
 class Rational;

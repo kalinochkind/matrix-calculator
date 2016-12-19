@@ -2,41 +2,49 @@
 #define _FINITE_H
 
 #include <iostream>
+#include "rational.h"
 
-int _FINITE_ORDER = 2;
+BigInteger _FINITE_ORDER = 2;
 
 class Finite
 {
-    int val;
+    BigInteger val;
 
-    long long binpow(long long a, int p) const
+    const BigInteger binpow(BigInteger a, BigInteger p) const
     {
-        long long t = 1;
+        BigInteger t = 1;
         while (p)
         {
-            if (p & 1)
+            if (p.odd())
                 t = (t * a) % _FINITE_ORDER;
             a = (a * a) % _FINITE_ORDER;
-            p >>= 1;
+            p /= 2;
         }
         return t;
     }
 
 public:
 
-    Finite(int n): val(n)
+    Finite(const BigInteger &n): val(n)
     {
         if (val >= _FINITE_ORDER)
             val %= _FINITE_ORDER;
         if (val < 0)
             val = _FINITE_ORDER - ((0ll - val - 1) % _FINITE_ORDER + 1);
-    };
+    }
+
+    Finite(int n): Finite(BigInteger(n)) {}
 
     Finite(): val(0) {};
 
-    explicit operator int() const
+    explicit operator const BigInteger() const
     {
         return val;
+    }
+
+    explicit operator int() const
+    {
+        return int(val);
     }
 
     explicit operator bool() const
@@ -56,7 +64,7 @@ public:
 
     Finite &operator+=(const Finite &a)
     {
-        long long nval = val + 0ll + a.val;
+        BigInteger nval = val + a.val;
         if (nval >= _FINITE_ORDER)
         {
             nval -= _FINITE_ORDER;
@@ -73,7 +81,7 @@ public:
 
     Finite &operator-=(const Finite &a)
     {
-        long long nval = val + 0ll - a.val;
+        BigInteger nval = val - a.val;
         if (nval < 0)
         {
             nval += _FINITE_ORDER;
@@ -90,7 +98,7 @@ public:
 
     Finite &operator*=(const Finite &a)
     {
-        long long nval = val * 1ll * a.val;
+        BigInteger nval = val * a.val;
         if (nval >= _FINITE_ORDER)
         {
             nval %= _FINITE_ORDER;
@@ -107,7 +115,8 @@ public:
 
     const Finite inverse() const
     {
-        return Finite(binpow(val, _FINITE_ORDER - 2));
+        auto p = ext_gcd(val, _FINITE_ORDER);
+        return Finite(p.first);
     }
 
     Finite operator/=(const Finite &a)
@@ -125,23 +134,23 @@ public:
 
 bool operator==(const Finite &a, const Finite &b)
 {
-    return int(a) == int(b);
+    return BigInteger(a) == BigInteger(b);
 }
 
 bool operator!=(const Finite &a, const Finite &b)
 {
-    return int(a) != int(b);
+    return BigInteger(a) != BigInteger(b);
 }
 
 
 std::ostream &operator<<(std::ostream &out, const Finite &a)
 {
-    return out << int(a);
+    return out << BigInteger(a);
 }
 
 std::istream &operator>>(std::istream &in, Finite &a)
 {
-    int t;
+    BigInteger t;
     in >> t;
     a = t;
     return in;

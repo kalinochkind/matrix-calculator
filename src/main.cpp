@@ -475,9 +475,11 @@ int main(int argc, char **argv)
         }
         else
         {
-            _FINITE_ORDER = atoi(argv[1]);
+            _FINITE_ORDER = BigInteger(argv[1]);
             if (_FINITE_ORDER < 2)
                 die("Order must be at least 2");
+            /*if(!_FINITE_ORDER.isPrime())
+                cout << "WARNING: finite field order is not prime\n";*/
             f_expr<Finite>();
         }
     }
