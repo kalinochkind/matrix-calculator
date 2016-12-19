@@ -493,14 +493,14 @@ public:
         }
         for (unsigned i = N - 1; i != unsigned(-1); --i)
         {
-            Field coeff = (*this)[i][i];
+            Field coeff = Field(1)/(*this)[i][i];
             for (unsigned j = 0; j < N; ++j)
             {
-                (*this)[i][j] /= coeff;
+                (*this)[i][j] *= coeff;
             }
             for (unsigned j = 0; j < ext.N; ++j)
             {
-                ext[i][j] /= coeff;
+                ext[i][j] *= coeff;
             }
             for (unsigned j = i + 1; j < N; j++)
             {
