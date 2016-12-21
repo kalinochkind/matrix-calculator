@@ -723,6 +723,13 @@ public:
         return int(double(*this));
     }
 
+    explicit operator const BigInteger() const
+    {
+        if(_denominator == 1)
+            return _numerator;
+        return _numerator / _denominator;
+    }
+
     const Rational operator+() const
     {
         return *this;

@@ -515,18 +515,18 @@ public:
         }
     }
 
-    const Matrix power(int pow) const
+    const Matrix power(const BigInteger &pow) const
     {
         if (M != N)
             throw matrix_error("Power is only defined for square matrices");
         Matrix t = identity(width());
         Matrix a(*this);
-        unsigned p = abs(pow);
+        BigInteger p = abs(pow);
         while (p)
         {
-            if (p & 1)
+            if (p.odd())
                 t *= a;
-            p >>= 1;
+            p /= 2;
             a *= a;
         }
         if (pow < 0)

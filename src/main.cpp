@@ -92,7 +92,7 @@ void processOp(string op, vector<NumMatrix> &st,
 template<class Field>
 struct _NumMatrix
 {
-    int im;
+    BigInteger im;
     Matrix<Field> fm;
     bool is_int;
 
@@ -100,7 +100,9 @@ struct _NumMatrix
 
     _NumMatrix(const _NumMatrix &a): im(a.im), fm(a.fm), is_int(a.is_int) {}
 
-    _NumMatrix(int a): im(a), fm(), is_int(true) {}
+    _NumMatrix(const BigInteger &a): im(a), fm(), is_int(true) {}
+
+    _NumMatrix(unsigned a): im(a), fm(), is_int(true) {}
 
     _NumMatrix(const Matrix<Field> &a): im(0), fm(a), is_int(false) {}
 
@@ -241,7 +243,7 @@ void f_expr()
                     {"id",        {1, [](const vector<NumMatrix *> &a) {
                         if (!a[1]->is_int)
                             die("Invalid use of id");
-                        return NumMatrix(Matrix<Field>::identity(abs(a[0]->im)));
+                        return NumMatrix(Matrix<Field>::identity(int(abs(a[0]->im))));
                     }}},
                     {"=",         {2, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix() == a[1]->toMatrix());
@@ -267,7 +269,7 @@ void f_expr()
                         if (a[1]->im < 0 || a[1]->im >= int(a[0]->toMatrix().height()) ||
                             a[2]->im < 0 || a[2]->im >= int(a[0]->toMatrix().width()))
                             die("at: out of range");
-                        return NumMatrix(a[0]->toMatrix()[a[1]->im][a[2]->im]);
+                        return NumMatrix(a[0]->toMatrix()[int(a[1]->im)][int(a[2]->im)]);
                     }}},
                     {"int",       {1, [](const vector<NumMatrix *> &a) {
                         if (a[0]->is_int)
@@ -389,7 +391,7 @@ void f_expr()
                     case TOKEN_NUMBER:
                         is.str(i.second);
                         is >> tt;
-                        if (tt == int(tt))
+                        if (tt == BigInteger(tt))
                             st.push_back(NumMatrix(int(tt)));
                         else
                         {

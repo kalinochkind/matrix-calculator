@@ -10,19 +10,6 @@ class Finite
 {
     BigInteger val;
 
-    const BigInteger binpow(BigInteger a, BigInteger p) const
-    {
-        BigInteger t = 1;
-        while (p)
-        {
-            if (p.odd())
-                t = (t * a) % _FINITE_ORDER;
-            a = (a * a) % _FINITE_ORDER;
-            p /= 2;
-        }
-        return t;
-    }
-
 public:
 
     Finite(const BigInteger &n): val(n)
