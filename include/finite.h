@@ -2,7 +2,7 @@
 #define _FINITE_H
 
 #include <iostream>
-#include "rational.h"
+#include "biginteger.h"
 
 BigInteger _FINITE_ORDER = 2;
 
