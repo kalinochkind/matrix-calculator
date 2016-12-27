@@ -119,23 +119,22 @@ public:
 };
 
 
-bool operator==(const Finite &a, const Finite &b)
+inline bool operator==(const Finite &a, const Finite &b)
 {
     return BigInteger(a) == BigInteger(b);
 }
 
-bool operator!=(const Finite &a, const Finite &b)
+inline bool operator!=(const Finite &a, const Finite &b)
 {
     return BigInteger(a) != BigInteger(b);
 }
 
-
-std::ostream &operator<<(std::ostream &out, const Finite &a)
+inline std::ostream &operator<<(std::ostream &out, const Finite &a)
 {
     return out << BigInteger(a);
 }
 
-std::istream &operator>>(std::istream &in, Finite &a)
+inline std::istream &operator>>(std::istream &in, Finite &a)
 {
     BigInteger t;
     in >> t;

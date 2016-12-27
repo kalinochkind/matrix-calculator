@@ -1,0 +1,594 @@
+#include "rational.h"
+#include <algorithm>
+
+void BigInteger::normalize()
+{
+    while (digits.size() && digits.back() == 0)
+        digits.pop_back();
+    if (digits.empty())
+        negative = false;
+}
+
+void BigInteger::shiftRight(size_t a)
+{
+    digits.resize(digits.size() + a);
+    for (size_t i = digits.size() - 1; i >= a; --i)
+    {
+        digits[i] = digits[i - a];
+    }
+    for (size_t i = 0; i < a; i++)
+    {
+        digits[i] = 0;
+    }
+}
+
+void BigInteger::multiply(unsigned a)
+{
+    long long carry = 0;
+    for (size_t i = 0; carry || i < digits.size(); i++)
+    {
+        if (i >= digits.size())
+            digits.push_back(0);
+        long long new_carry = (digits[i] * 1ll * a + carry) / BLOCK_MOD;
+        digits[i] = (digits[i] * 1ll * a + carry) % BLOCK_MOD;
+        carry = new_carry;
+    }
+}
+
+compare_t BigInteger::_compareAbs(const BigInteger &a) const
+{
+    if (digits.size() < a.digits.size())
+        return CMP_LESS;
+    if (digits.size() > a.digits.size())
+        return CMP_GREATER;
+    for (size_t i = digits.size(); i > 0; --i)
+    {
+        if (digits[i - 1] < a.digits[i - 1])
+            return CMP_LESS;
+        if (digits[i - 1] > a.digits[i - 1])
+            return CMP_GREATER;
+    }
+    return CMP_EQUAL;
+}
+
+const BigInteger BigInteger::karatsuba(const BigInteger &a) const
+{
+    if (a.digits.size() <= 1)
+    {
+        BigInteger res(*this);
+        res.multiply(a.digits[0]);
+        return res;
+    }
+    size_t maxlen = std::max(digits.size(), a.digits.size());
+    maxlen += maxlen % 2;
+    BigInteger a1, a2, b1, b2;
+    for (size_t i = 0; i < maxlen; i++)
+    {
+        if (i * 2 < maxlen)
+        {
+            a2.digits.push_back(i < digits.size() ? digits[i] : 0);
+            b2.digits.push_back(i < a.digits.size() ? a.digits[i] : 0);
+        }
+        else
+        {
+            a1.digits.push_back(i < digits.size() ? digits[i] : 0);
+            b1.digits.push_back(i < a.digits.size() ? a.digits[i] : 0);
+        }
+    }
+    a1.normalize();
+    b1.normalize();
+    a2.normalize();
+    b2.normalize();
+    BigInteger a1b1 = a1.karatsuba(b1);
+    BigInteger a2b2 = a2.karatsuba(b2);
+    BigInteger sum = (a1 + a2).karatsuba(b1 + b2) - a1b1 - a2b2;
+    a1b1.shiftRight(maxlen);
+    sum.shiftRight(maxlen / 2);
+    return a1b1 + sum + a2b2;
+}
+
+void BigInteger::_divide(int a, int &remainder)
+{
+    if (!a)
+        throw zero_division_error("Integer division by zero");
+    if (digits.empty())
+    {
+        remainder = 0;
+        return;
+    }
+    if (a < 0)
+        negative ^= 1;
+    long long carry = 0;
+    for (auto i = digits.rbegin(); i != digits.rend(); ++i)
+    {
+        carry = carry * BLOCK_MOD + *i;
+        *i = carry / abs(a);
+        carry %= abs(a);
+    }
+    remainder = static_cast<int>(carry);
+    normalize();
+}
+
+const BigInteger BigInteger::_divide_long(BigInteger a)
+{
+    negative = a.negative = false;
+    BigInteger ans;
+    if(_compareAbs(a) < 0)
+        return 0;
+    int shift = 0;
+    while(_compareAbs(a) >= 0)
+    {
+        a.digits.insert(a.digits.begin(), 0);
+        ++shift;
+    }
+    a.digits.erase(a.digits.begin());
+    for(;shift;--shift)
+    {
+        int l = 0, r = BLOCK_MOD;
+        while(l + 1 < r)
+        {
+            int m = (l + r) / 2;
+            if(_compareAbs(a * m) < 0)
+                r = m;
+            else
+                l = m;
+        }
+        ans.digits.push_back(l);
+        *this -= a * l;
+        a.digits.erase(a.digits.begin());
+    }
+    std::reverse(ans.digits.begin(), ans.digits.end());
+    ans.normalize();
+    return ans;
+}
+
+BigInteger::BigInteger(long long a): digits(), negative(false)
+{
+    if (a < 0)
+    {
+        negative = true;
+        a = -a;
+    }
+    while (a)
+    {
+        digits.push_back(a % BLOCK_MOD);
+        a /= BLOCK_MOD;
+    }
+}
+
+BigInteger::BigInteger(const std::string &s): digits(), negative(false)
+{
+    unsigned temp = 0;
+    unsigned pow = 1;
+    for (auto i = s.crbegin(); i != s.crend(); ++i)
+    {
+        if (*i == '-')
+        {
+            negative = true;
+            continue;
+        }
+        temp += pow * (*i - '0');
+        pow *= 10;
+        if (pow == BLOCK_MOD)
+        {
+            pow = 1;
+            digits.push_back(temp);
+            temp = 0;
+        }
+    }
+    digits.push_back(temp);
+    normalize();
+}
+
+compare_t BigInteger::_compare(const BigInteger &a) const
+{
+    if (negative && !a.negative)
+        return CMP_LESS;
+    if (!negative && a.negative)
+        return CMP_GREATER;
+    return static_cast<compare_t>(_compareAbs(a) * (negative ? -1 : 1));
+}
+
+std::string BigInteger::toString() const
+{
+    if (digits.empty())
+        return "0";
+    std::string res = (negative ? "-" : "");
+    for (auto i = digits.rbegin(); i != digits.rend(); ++i)
+    {
+        std::string temp = ::toString(*i);
+        if (i != digits.rbegin())
+        {
+            while (temp.length() < BLOCK_SIZE)
+            {
+                temp = "0" + temp;
+            }
+        }
+        res += temp;
+    }
+    return res;
+}
+
+BigInteger &BigInteger::operator+=(const BigInteger &a)
+{
+    bool sub = negative ^a.negative;
+    int rem = 0;
+    if (!sub)  // addition
+    {
+        for (size_t i = 0; i < std::max(a.digits.size(), digits.size()) || rem; ++i)
+        {
+            if (digits.size() <= i)
+                digits.push_back(0);
+            digits[i] = digits[i] + (a.digits.size() > i ? a.digits[i] : 0) + rem;
+            rem = digits[i] / BLOCK_MOD;
+            digits[i] %= BLOCK_MOD;
+        }
+    }
+    else
+    {
+        bool rev = _compareAbs(a) < 0;
+        const BigInteger &big = (rev ? a : *this), &small = (rev ? *this : a);
+        negative = big.negative;
+        for (size_t i = 0; i < a.digits.size() || rem; ++i)
+        {
+            if (digits.size() <= i)
+                digits.push_back(0);
+            unsigned dig = (small.digits.size() > i ? small.digits[i] : 0);
+            if (big.digits[i] >= dig + rem)
+            {
+                digits[i] = big.digits[i] - dig - rem;
+                rem = 0;
+            }
+            else
+            {
+                digits[i] = BLOCK_MOD + big.digits[i] - dig - rem;
+                rem = 1;
+            }
+        }
+    }
+    normalize();
+    return *this;
+}
+
+BigInteger &BigInteger::operator*=(BigInteger a)
+{
+    bool neg = negative ^a.negative;
+    if (_compareAbs(a) == CMP_LESS)
+    {
+        std::swap(*this, a);
+    }
+    if (!a.digits.size())
+    {
+        digits.clear();
+    }
+    else if (a.digits.size() == 1)
+    {
+        multiply(a.digits[0]);
+    }
+    else
+    {
+        *this = karatsuba(a);
+    }
+    negative = neg;
+    normalize();
+    return *this;
+}
+
+BigInteger &BigInteger::operator/=(const BigInteger &a)
+{
+    if (!a)
+        throw zero_division_error("Integer division by zero");
+    if (a.digits.size() <= 1)
+    {
+        int temp;
+        _divide(a.digits[0], temp);
+        return *this;
+    }
+    bool neg = a.negative ^ negative;
+    *this = _divide_long(a);
+    negative = neg;
+    normalize();
+    return *this;
+}
+
+BigInteger &BigInteger::operator%=(const BigInteger &a)
+{
+    BigInteger temp(*this);
+    temp /= a;
+    temp *= a;
+    return *this -= temp;
+}
+
+BigInteger &BigInteger::operator-=(const BigInteger &a)
+{
+    negative ^= 1;
+    *this += a;
+    negative ^= 1;
+    normalize();
+    return *this;
+}
+
+const BigInteger operator+(const BigInteger &a, const BigInteger &b)
+{
+    BigInteger temp(a);
+    temp += b;
+    return temp;
+}
+
+const BigInteger operator-(const BigInteger &a, const BigInteger &b)
+{
+    BigInteger temp(a);
+    temp -= b;
+    return temp;
+}
+
+const BigInteger operator*(const BigInteger &a, const BigInteger &b)
+{
+    BigInteger temp(a);
+    temp *= b;
+    return temp;
+}
+
+const BigInteger operator/(const BigInteger &a, const BigInteger &b)
+{
+    BigInteger temp(a);
+    temp /= b;
+    return temp;
+}
+
+const BigInteger operator%(const BigInteger &a, const BigInteger &b)
+{
+    BigInteger temp(a);
+    temp %= b;
+    return temp;
+}
+
+std::ostream &operator<<(std::ostream &out, const BigInteger &a)
+{
+    return out << a.toString();
+}
+
+std::istream &operator>>(std::istream &in, BigInteger &a)
+{
+    std::string s;
+    in >> s;
+    a = BigInteger(s);
+    return in;
+}
+
+
+const BigInteger gcd(BigInteger a, BigInteger b)
+{
+    BigInteger d = 1;
+    while (a && b)
+    {
+        if (!a.odd() && !b.odd())
+        {
+            d *= 2;
+            a /= 2;
+            b /= 2;
+        }
+        else if (!a.odd())
+        {
+            a /= 2;
+        }
+        else if (!b.odd())
+        {
+            b /= 2;
+        }
+        else if (a >= b)
+        {
+            a -= b;
+        }
+        else
+        {
+            b -= a;
+        }
+    }
+    return d * (a ? a : b);
+}
+
+
+std::pair<BigInteger, BigInteger> ext_gcd(BigInteger a, BigInteger b)
+{
+    BigInteger u = 1, v = 0, s = 0, t = 1;
+    while(!a.odd() && !b.odd())
+    {
+        a /= 2;
+        b /= 2;
+    }
+    BigInteger alpha = a, beta = b;
+    while(!a.odd())
+    {
+        a /= 2;
+        if(!u.odd() && !b.odd())
+        {
+            u /= 2;
+            v /= 2;
+        }
+        else
+        {
+            u += beta;
+            u /= 2;
+            v -= alpha;
+            v /= 2;
+        }
+    }
+    while(a != b)
+    {
+        if(!b.odd())
+        {
+            b /= 2;
+            if(!s.odd() && !t.odd())
+            {
+                s /= 2;
+                t /= 2;
+            }
+            else
+            {
+                s += beta;
+                s /= 2;
+                t -= alpha;
+                t /= 2;
+            }
+        }
+        else if(b < a)
+        {
+            a.swap(b);
+            u.swap(s);
+            v.swap(t);
+        }
+        else
+        {
+            b -= a;
+            s -= u;
+            t -= v;
+        }
+    }
+    return {s, t};
+}
+
+void Rational::normalize()
+{
+    if (_denominator < 0)
+    {
+        _denominator = -_denominator;
+        _numerator = -_numerator;
+    }
+    BigInteger a = gcd(abs(_numerator), _denominator);
+    _numerator /= a;
+    _denominator /= a;
+}
+
+void Rational::expand(const BigInteger &a)
+{
+    _numerator *= a;
+    _denominator *= a;
+}
+
+Rational::Rational(const std::string &s): _numerator(), _denominator()
+{
+    size_t i = 0;
+    std::string s1, s2;
+    for (; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
+    {
+        s1.push_back(s[i]);
+    }
+    if (i >= s.size())
+    {
+        *this = Rational(BigInteger(s1));
+        return;
+    }
+    char c = s[i++];
+    for (; i < s.size(); ++i)
+    {
+        s2.push_back(s[i]);
+    }
+    if (c == '/')
+    {
+        *this = Rational(BigInteger(s1), BigInteger(s2));
+        return;
+    }
+    else
+    {
+        Rational fr = Rational(BigInteger(s2), BigInteger('1' + std::string(s2.size(), '0')));
+        if (s1.size() && s1[0] == '-')
+            fr = -fr;
+        *this = Rational(BigInteger(s1)) + fr;
+    }
+}
+
+std::string Rational::toString() const
+{
+    return _numerator.toString() + (_denominator == 1 ? "" : ("/" + _denominator.toString()));
+}
+
+Rational &Rational::operator+=(const Rational &a)
+{
+    BigInteger d = gcd(_denominator, a._denominator);
+    expand(a._denominator / d);
+    _numerator += a._numerator * _denominator / a._denominator;
+    normalize();
+    return *this;
+}
+
+Rational &Rational::operator*=(const Rational &a)
+{
+    _numerator *= a._numerator;
+    _denominator *= a._denominator;
+    normalize();
+    return *this;
+}
+
+Rational &Rational::operator/=(const Rational &a)
+{
+    if (!a._numerator)
+        throw zero_division_error("Rational division by zero");
+    _numerator *= a._denominator;
+    _denominator *= a._numerator;
+    normalize();
+    return *this;
+}
+
+const std::string Rational::asDecimal(size_t precision) const
+{
+    BigInteger newnum = _numerator;
+    for (unsigned i = 0; i < precision; ++i)
+    {
+        newnum *= 10;
+    }
+    std::string result = abs(newnum / _denominator).toString();
+    if (result.size() < precision + 1)
+    {
+        result = std::string(precision + 1 - result.size(), '0') + result;
+    }
+    if (precision)
+        result.insert(result.end() - precision, '.');
+    while(precision && result.back() == '0')
+        result.pop_back();
+    if (_numerator < 0)
+        result = "-" + result;
+    return result;
+}
+
+
+const Rational operator+(const Rational &a, const Rational &b)
+{
+    Rational temp(a);
+    temp += b;
+    return temp;
+}
+
+const Rational operator-(const Rational &a, const Rational &b)
+{
+    Rational temp(a);
+    temp -= b;
+    return temp;
+}
+
+const Rational operator*(const Rational &a, const Rational &b)
+{
+    Rational temp(a);
+    temp *= b;
+    return temp;
+}
+
+const Rational operator/(const Rational &a, const Rational &b)
+{
+    Rational temp(a);
+    temp /= b;
+    return temp;
+}
+
+std::ostream &operator<<(std::ostream &out, const Rational &a)
+{
+    return out << a.toString();
+}
+
+std::istream &operator>>(std::istream &in, Rational &a)
+{
+    std::string s;
+    in >> s;
+    a = Rational(s);
+    return in;
+}

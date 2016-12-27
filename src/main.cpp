@@ -241,7 +241,7 @@ void f_expr()
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
                     {"id",        {1, [](const vector<NumMatrix *> &a) {
-                        if (!a[1]->is_int)
+                        if (!a[0]->is_int)
                             die("Invalid use of id");
                         return NumMatrix(Matrix<Field>::identity(int(abs(a[0]->im))));
                     }}},

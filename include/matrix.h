@@ -2,7 +2,6 @@
 #define _MATIX_H
 
 #include "rational.h"
-#include <vector>
 #include <iostream>
 #include <cassert>
 
@@ -413,26 +412,6 @@ public:
         Matrix tmp(*this);
         unsigned a = tmp.gauss();
         return a;
-    }
-
-    const std::vector<Field> getRow(unsigned n) const
-    {
-        std::vector<Field> ans(N);
-        for (unsigned i = 0; i < N; i++)
-        {
-            ans[i] = arr[n * N + i];
-        }
-        return ans;
-    }
-
-    const std::vector<Field> getColumn(unsigned n) const
-    {
-        std::vector<Field> ans(M);
-        for (unsigned i = 0; i < M; i++)
-        {
-            ans[i] = arr[i * N + n];
-        }
-        return ans;
     }
 
     bool operator==(const Matrix &a) const
