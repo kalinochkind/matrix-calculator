@@ -15,13 +15,13 @@ class matrix_error: public std::runtime_error
 template<class Field>
 void _strassen(unsigned N, Field *a, Field *b, Field *res)
 {
-    if (N <= strassen_threshold)
+    if(N <= strassen_threshold)
     {
-        for (unsigned i = 0; i < N; ++i)
+        for(unsigned i = 0; i < N; ++i)
         {
-            for (unsigned j = 0; j < N; ++j)
+            for(unsigned j = 0; j < N; ++j)
             {
-                for (unsigned q = 0; q < N; ++q)
+                for(unsigned q = 0; q < N; ++q)
                 {
                     res[i * N + j] += a[i * N + q] * b[q * N + j];
                 }
@@ -118,11 +118,11 @@ class Matrix
     {
         assert(N == a.M);
         Matrix res(M, a.N);
-        for (unsigned i = 0; i < M; ++i)
+        for(unsigned i = 0; i < M; ++i)
         {
-            for (unsigned j = 0; j < a.N; ++j)
+            for(unsigned j = 0; j < a.N; ++j)
             {
-                for (unsigned q = 0; q < N; ++q)
+                for(unsigned q = 0; q < N; ++q)
                 {
                     res[i][j] += (*this)[i][q] * a[q][j];
                 }
@@ -136,20 +136,20 @@ class Matrix
         assert(N == m.M);
         Matrix res(M, m.N);
         unsigned mx = std::max(M, std::max(N, m.N));
-        while (mx & (mx - 1))
+        while(mx & (mx - 1))
             ++mx;
         Field *a = new Field[mx * mx];
         Field *b = new Field[mx * mx];
         Field *r = new Field[mx * mx];
-        for (unsigned i = 0; i < M; ++i)
-            for (unsigned j = 0; j < N; ++j)
+        for(unsigned i = 0; i < M; ++i)
+            for(unsigned j = 0; j < N; ++j)
                 a[i * mx + j] = (*this)[i][j];
-        for (unsigned i = 0; i < N; ++i)
-            for (unsigned j = 0; j < m.N; ++j)
+        for(unsigned i = 0; i < N; ++i)
+            for(unsigned j = 0; j < m.N; ++j)
                 b[i * mx + j] = m[i][j];
         _strassen(mx, a, b, r);
-        for (unsigned i = 0; i < M; ++i)
-            for (unsigned j = 0; j < m.N; ++j)
+        for(unsigned i = 0; i < M; ++i)
+            for(unsigned j = 0; j < m.N; ++j)
                 res[i][j] = r[i * mx + j];
         delete[] a;
         delete[] b;
@@ -166,7 +166,7 @@ public:
 
     Matrix(const Matrix &a): Matrix(a.M, a.N)
     {
-        for (unsigned i = 0; i < M * N; ++i)
+        for(unsigned i = 0; i < M * N; ++i)
         {
             arr[i] = a.arr[i];
         }
@@ -174,13 +174,13 @@ public:
 
     Matrix &operator=(const Matrix &a)
     {
-        if (arr == a.arr)
+        if(arr == a.arr)
             return *this;
         M = a.M;
         N = a.N;
         delete[] arr;
         arr = new Field[M * N];
-        for (unsigned i = 0; i < M * N; ++i)
+        for(unsigned i = 0; i < M * N; ++i)
         {
             arr[i] = a.arr[i];
         }
@@ -194,27 +194,27 @@ public:
 
     unsigned gauss(Matrix *ext = nullptr)
     {
-        if (ext)
+        if(ext)
         {
             assert(M == ext->M);
         }
         unsigned row = 0;
-        for (unsigned col = 0; col < N; ++col)
+        for(unsigned col = 0; col < N; ++col)
         {
-            for (unsigned i = row; i < M; ++i)
+            for(unsigned i = row; i < M; ++i)
             {
-                if ((*this)[i][col])
+                if((*this)[i][col])
                 {
-                    if (i != row)
+                    if(i != row)
                     {
-                        for (unsigned j = 0; j < N; ++j)
+                        for(unsigned j = 0; j < N; ++j)
                         {
                             std::swap((*this)[i][j], (*this)[row][j]);
                             (*this)[i][j] = -(*this)[i][j];
                         }
-                        if (ext)
+                        if(ext)
                         {
-                            for (unsigned j = 0; j < ext->N; ++j)
+                            for(unsigned j = 0; j < ext->N; ++j)
                             {
                                 std::swap((*ext)[i][j], (*ext)[row][j]);
                                 (*ext)[i][j] = -(*ext)[i][j];
@@ -224,24 +224,25 @@ public:
                     break;
                 }
             }
-            if (!(*this)[row][col])
+            if(!(*this)[row][col])
             {
                 continue;
             }
-            for (unsigned i = row + 1; i < M; ++i)
+            for(unsigned i = row + 1; i < M; ++i)
             {
                 Field coeff = (*this)[i][col] / (*this)[row][col];
-                for (unsigned j = 0; j < N; ++j)
+                for(unsigned j = 0; j < N; ++j)
                 {
                     (*this)[i][j] -= (*this)[row][j] * coeff;
                 }
-                if (ext)
+                if(ext)
                 {
-                    for (unsigned j = 0; j < ext->N; ++j)
+                    for(unsigned j = 0; j < ext->N; ++j)
                         (*ext)[i][j] -= (*ext)[row][j] * coeff;
                 }
             }
-            ++row;
+            if(++row == M)
+                return row;
         }
         return row;
     }
@@ -249,7 +250,7 @@ public:
     static const Matrix identity(unsigned n)
     {
         Matrix res(n);
-        for (unsigned i = 0; i < n; ++i)
+        for(unsigned i = 0; i < n; ++i)
         {
             res[i][i] = 1;
         }
@@ -275,9 +276,9 @@ public:
 
     Matrix &operator+=(const Matrix &a)
     {
-        if (M != a.M || N != a.N)
+        if(M != a.M || N != a.N)
             throw matrix_error("Trying to add matrices of different size");
-        for (unsigned i = 0; i < N * M; ++i)
+        for(unsigned i = 0; i < N * M; ++i)
         {
             arr[i] += a.arr[i];
         }
@@ -293,7 +294,7 @@ public:
     const Matrix operator-() const
     {
         Matrix temp(*this);
-        for (unsigned i = 0; i < N * M; ++i)
+        for(unsigned i = 0; i < N * M; ++i)
         {
             temp.arr[i] = -temp.arr[i];
         }
@@ -307,9 +308,9 @@ public:
 
     Matrix &operator-=(const Matrix &a)
     {
-        if (M != a.M || N != a.N)
+        if(M != a.M || N != a.N)
             throw matrix_error("Trying to subtract matrices of different size");
-        for (unsigned i = 0; i < N * M; ++i)
+        for(unsigned i = 0; i < N * M; ++i)
         {
             arr[i] -= a.arr[i];
         }
@@ -324,7 +325,7 @@ public:
 
     Matrix &operator*=(Field a)
     {
-        for (unsigned i = 0; i < N * M; ++i)
+        for(unsigned i = 0; i < N * M; ++i)
         {
             arr[i] *= a;
         }
@@ -344,9 +345,9 @@ public:
 
     const Matrix operator*(const Matrix &a) const
     {
-        if (N != a.M)
+        if(N != a.M)
             throw matrix_error("Trying to multiply matrices of different size");
-        if (std::max(M, a.N) < strassen_threshold)
+        if(std::max(M, a.N) < strassen_threshold)
         {
             return _multiplyCube(a);
         }
@@ -358,13 +359,13 @@ public:
 
     const Field det() const
     {
-        if (N != M)
+        if(N != M)
             throw matrix_error("Trying to calculate determinant of a non-square matrix");
         Matrix tmp(*this);
-        if (tmp.gauss() != N)
+        if(tmp.gauss() != N)
             return Field();
         Field ans = tmp[0][0];
-        for (unsigned j = 1; j < N; ++j)
+        for(unsigned j = 1; j < N; ++j)
         {
             ans *= tmp[j][j];
         }
@@ -374,8 +375,8 @@ public:
     const Matrix transposed() const
     {
         Matrix res(N, M);
-        for (unsigned i = 0; i < M; ++i)
-            for (unsigned j = 0; j < N; ++j)
+        for(unsigned i = 0; i < M; ++i)
+            for(unsigned j = 0; j < N; ++j)
             {
                 res[j][i] = (*this)[i][j];
             }
@@ -384,10 +385,10 @@ public:
 
     const Field trace() const
     {
-        if (N != M)
+        if(N != M)
             throw matrix_error("Trying to calculate trace of a non-square matrix");
         Field ans;
-        for (unsigned i = 0; i < N * N; i += N + 1)
+        for(unsigned i = 0; i < N * N; i += N + 1)
         {
             ans += arr[i];
         }
@@ -416,11 +417,11 @@ public:
 
     bool operator==(const Matrix &a) const
     {
-        if (M != a.M || N != a.N)
+        if(M != a.M || N != a.N)
             return false;
-        for (unsigned i = 0; i < N * M; ++i)
+        for(unsigned i = 0; i < N * M; ++i)
         {
-            if (arr[i] != a.arr[i])
+            if(arr[i] != a.arr[i])
                 return false;
         }
         return true;
@@ -443,14 +444,14 @@ public:
 
     const Matrix submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2) const
     {
-        if (x1 > x2)
+        if(x1 > x2)
             std::swap(x1, x2);
-        if (y1 > y2)
+        if(y1 > y2)
             std::swap(y1, y2);
         Matrix res(x2 - x1 + 1, y2 - y1 + 1);
-        for (unsigned i = x1; i <= x2; ++i)
+        for(unsigned i = x1; i <= x2; ++i)
         {
-            for (unsigned j = y1; j <= y2; ++j)
+            for(unsigned j = y1; j <= y2; ++j)
             {
                 res[i - x1][j - y1] = (*this)[i][j];
             }
@@ -460,32 +461,32 @@ public:
 
     void inverseExt(Matrix &ext)
     {
-        if (N != M)
+        if(N != M)
             throw matrix_error("Trying to inverse a non-square matrix");
-        if (M != ext.M)
+        if(M != ext.M)
         {
             throw matrix_error("Invalid use of inverseExt");
         }
-        if (gauss(&ext) != N)
+        if(gauss(&ext) != N)
         {
             throw matrix_error("Cannot inverse a singular matrix");
         }
-        for (unsigned i = N - 1; i != unsigned(-1); --i)
+        for(unsigned i = N - 1; i != unsigned(-1); --i)
         {
-            Field coeff = Field(1)/(*this)[i][i];
-            for (unsigned j = 0; j < N; ++j)
+            Field coeff = Field(1) / (*this)[i][i];
+            for(unsigned j = 0; j < N; ++j)
             {
                 (*this)[i][j] *= coeff;
             }
-            for (unsigned j = 0; j < ext.N; ++j)
+            for(unsigned j = 0; j < ext.N; ++j)
             {
                 ext[i][j] *= coeff;
             }
-            for (unsigned j = i + 1; j < N; j++)
+            for(unsigned j = i + 1; j < N; j++)
             {
-                if (!(*this)[i][j])
+                if(!(*this)[i][j])
                     continue;
-                for (unsigned q = 0; q < ext.N; q++)
+                for(unsigned q = 0; q < ext.N; q++)
                 {
                     ext[i][q] -= ext[j][q] * (*this)[i][j];
                 }
@@ -496,37 +497,37 @@ public:
 
     const Matrix power(const BigInteger &pow) const
     {
-        if (M != N)
+        if(M != N)
             throw matrix_error("Power is only defined for square matrices");
         Matrix t = identity(width());
         Matrix a(*this);
         BigInteger p = abs(pow);
-        while (p)
+        while(p)
         {
-            if (p.odd())
+            if(p.odd())
                 t *= a;
             p /= 2;
             a *= a;
         }
-        if (pow < 0)
+        if(pow < 0)
             t.inverse();
         return t;
     }
 
     const Matrix joinHorizontal(const Matrix &a) const
     {
-        if (M != a.M)
+        if(M != a.M)
         {
             throw matrix_error("Trying to join matrices of different height");
         }
         Matrix res(M, N + a.N);
-        for (unsigned i = 0; i < M; i++)
+        for(unsigned i = 0; i < M; i++)
         {
-            for (unsigned j = 0; j < N; j++)
+            for(unsigned j = 0; j < N; j++)
             {
                 res[i][j] = (*this)[i][j];
             }
-            for (unsigned j = 0; j < a.N; j++)
+            for(unsigned j = 0; j < a.N; j++)
             {
                 res[i][N + j] = a[i][j];
             }
@@ -536,21 +537,21 @@ public:
 
     const Matrix joinVertical(const Matrix &a) const
     {
-        if (N != a.N)
+        if(N != a.N)
         {
             throw matrix_error("Trying to join matrices of different width");
         }
         Matrix res(M + a.M, N);
-        for (unsigned i = 0; i < M; i++)
+        for(unsigned i = 0; i < M; i++)
         {
-            for (unsigned j = 0; j < N; j++)
+            for(unsigned j = 0; j < N; j++)
             {
                 res[i][j] = (*this)[i][j];
             }
         }
-        for (unsigned i = 0; i < a.M; i++)
+        for(unsigned i = 0; i < a.M; i++)
         {
-            for (unsigned j = 0; j < N; j++)
+            for(unsigned j = 0; j < N; j++)
             {
                 res[M + i][j] = a[i][j];
             }
@@ -562,11 +563,11 @@ public:
 template<class Field>
 std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
-    if (!a.width() || !a.height())
+    if(!a.width() || !a.height())
         return out;
-    for (unsigned i = 0; i < a.height(); ++i)
+    for(unsigned i = 0; i < a.height(); ++i)
     {
-        for (unsigned j = 0; j < a.width(); ++j)
+        for(unsigned j = 0; j < a.width(); ++j)
         {
             out << a[i][j] << ' ';
         }
@@ -578,9 +579,9 @@ std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 template<class Field>
 std::istream &operator>>(std::istream &in, Matrix<Field> &a)
 {
-    for (unsigned i = 0; i < a.height(); ++i)
+    for(unsigned i = 0; i < a.height(); ++i)
     {
-        for (unsigned j = 0; j < a.width(); ++j)
+        for(unsigned j = 0; j < a.width(); ++j)
         {
             in >> a[i][j];
         }
