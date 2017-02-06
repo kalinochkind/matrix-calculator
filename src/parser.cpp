@@ -17,47 +17,47 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
     std::string func, num;
     std::vector<std::pair<token_type, std::string> > ans;
     token_type last = TOKEN_LEFTPAR;
-    for (char i : expr + ' ')
+    for(char i : expr + ' ')
     {
-        if ('A' <= i && i <= 'Z')
+        if('A' <= i && i <= 'Z')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
-            if (last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
+            if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
                 ans.push_back({TOKEN_OP, "*"});
             ans.push_back({TOKEN_MATRIX, std::string() + i});
             last = TOKEN_MATRIX;
         }
-        else if (i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=' || i == '/')
+        else if(i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=' || i == '/')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
-            if (i == '(')
+            if(i == '(')
             {
-                if (last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
+                if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
                     ans.push_back({TOKEN_OP, "*"});
                 ans.push_back({TOKEN_LEFTPAR, ""});
             }
-            else if (i == ')')
+            else if(i == ')')
                 ans.push_back({TOKEN_RIGHTPAR, ""});
             else
                 ans.push_back({TOKEN_OP, std::string() + i});
             last = ans.back().first;
         }
-        else if (i == '-')
+        else if(i == '-')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
-            if (last == TOKEN_LEFTPAR || last == TOKEN_OP || last == TOKEN_COMMA)
+            if(last == TOKEN_LEFTPAR || last == TOKEN_OP || last == TOKEN_COMMA)
             {
                 ans.push_back({TOKEN_OP, "_"});  // unary
             }
@@ -67,17 +67,17 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             }
             last = TOKEN_OP;
         }
-        else if (('0' <= i && i <= '9') || i == '.')
+        else if(('0' <= i && i <= '9') || i == '.')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
             func = "";
             num.push_back(i);
             last = TOKEN_NUMBER;
         }
-        else if ('a' <= i && i <= 'z')
+        else if('a' <= i && i <= 'z')
         {
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = "";
             func.push_back(i);
@@ -85,9 +85,9 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
         }
         else if(i == ',')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
             ans.push_back({TOKEN_COMMA, ""});
@@ -95,9 +95,9 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
         }
         else if(i == '$')
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
             ans.push_back({TOKEN_DOLLAR, ""});
@@ -105,9 +105,9 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
         }
         else
         {
-            if (func.size())
+            if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
-            if (num.size())
+            if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
         }

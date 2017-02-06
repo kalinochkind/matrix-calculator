@@ -11,20 +11,20 @@ inline const std::string toString(const T &a)
 
 void BigInteger::normalize()
 {
-    while (digits.size() && digits.back() == 0)
+    while(digits.size() && digits.back() == 0)
         digits.pop_back();
-    if (digits.empty())
+    if(digits.empty())
         negative = false;
 }
 
 void BigInteger::shiftRight(size_t a)
 {
     digits.resize(digits.size() + a);
-    for (size_t i = digits.size() - 1; i >= a; --i)
+    for(size_t i = digits.size() - 1; i >= a; --i)
     {
         digits[i] = digits[i - a];
     }
-    for (size_t i = 0; i < a; i++)
+    for(size_t i = 0; i < a; i++)
     {
         digits[i] = 0;
     }
@@ -33,9 +33,9 @@ void BigInteger::shiftRight(size_t a)
 void BigInteger::multiply(unsigned a)
 {
     long long carry = 0;
-    for (size_t i = 0; carry || i < digits.size(); i++)
+    for(size_t i = 0; carry || i < digits.size(); i++)
     {
-        if (i >= digits.size())
+        if(i >= digits.size())
             digits.push_back(0);
         long long new_carry = (digits[i] * 1ll * a + carry) / BLOCK_MOD;
         digits[i] = (digits[i] * 1ll * a + carry) % BLOCK_MOD;
@@ -45,15 +45,15 @@ void BigInteger::multiply(unsigned a)
 
 compare_t BigInteger::_compareAbs(const BigInteger &a) const
 {
-    if (digits.size() < a.digits.size())
+    if(digits.size() < a.digits.size())
         return CMP_LESS;
-    if (digits.size() > a.digits.size())
+    if(digits.size() > a.digits.size())
         return CMP_GREATER;
-    for (size_t i = digits.size(); i > 0; --i)
+    for(size_t i = digits.size(); i > 0; --i)
     {
-        if (digits[i - 1] < a.digits[i - 1])
+        if(digits[i - 1] < a.digits[i - 1])
             return CMP_LESS;
-        if (digits[i - 1] > a.digits[i - 1])
+        if(digits[i - 1] > a.digits[i - 1])
             return CMP_GREATER;
     }
     return CMP_EQUAL;
@@ -61,7 +61,7 @@ compare_t BigInteger::_compareAbs(const BigInteger &a) const
 
 const BigInteger BigInteger::karatsuba(const BigInteger &a) const
 {
-    if (a.digits.size() <= 1)
+    if(a.digits.size() <= 1)
     {
         BigInteger res(*this);
         res.multiply(a.digits[0]);
@@ -70,9 +70,9 @@ const BigInteger BigInteger::karatsuba(const BigInteger &a) const
     size_t maxlen = std::max(digits.size(), a.digits.size());
     maxlen += maxlen % 2;
     BigInteger a1, a2, b1, b2;
-    for (size_t i = 0; i < maxlen; i++)
+    for(size_t i = 0; i < maxlen; i++)
     {
-        if (i * 2 < maxlen)
+        if(i * 2 < maxlen)
         {
             a2.digits.push_back(i < digits.size() ? digits[i] : 0);
             b2.digits.push_back(i < a.digits.size() ? a.digits[i] : 0);
@@ -97,17 +97,17 @@ const BigInteger BigInteger::karatsuba(const BigInteger &a) const
 
 void BigInteger::_divide(int a, int &remainder)
 {
-    if (!a)
+    if(!a)
         throw zero_division_error("Integer division by zero");
-    if (digits.empty())
+    if(digits.empty())
     {
         remainder = 0;
         return;
     }
-    if (a < 0)
+    if(a < 0)
         negative ^= 1;
     long long carry = 0;
-    for (auto i = digits.rbegin(); i != digits.rend(); ++i)
+    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
     {
         carry = carry * BLOCK_MOD + *i;
         *i = carry / abs(a);
@@ -130,7 +130,7 @@ const BigInteger BigInteger::_divide_long(BigInteger a)
         ++shift;
     }
     a.digits.erase(a.digits.begin());
-    for(;shift;--shift)
+    for(; shift; --shift)
     {
         int l = 0, r = BLOCK_MOD;
         while(l + 1 < r)
@@ -152,12 +152,12 @@ const BigInteger BigInteger::_divide_long(BigInteger a)
 
 BigInteger::BigInteger(long long a): digits(), negative(false)
 {
-    if (a < 0)
+    if(a < 0)
     {
         negative = true;
         a = -a;
     }
-    while (a)
+    while(a)
     {
         digits.push_back(a % BLOCK_MOD);
         a /= BLOCK_MOD;
@@ -168,16 +168,16 @@ BigInteger::BigInteger(const std::string &s): digits(), negative(false)
 {
     unsigned temp = 0;
     unsigned pow = 1;
-    for (auto i = s.crbegin(); i != s.crend(); ++i)
+    for(auto i = s.crbegin(); i != s.crend(); ++i)
     {
-        if (*i == '-')
+        if(*i == '-')
         {
             negative = true;
             continue;
         }
         temp += pow * (*i - '0');
         pow *= 10;
-        if (pow == BLOCK_MOD)
+        if(pow == BLOCK_MOD)
         {
             pow = 1;
             digits.push_back(temp);
@@ -190,24 +190,24 @@ BigInteger::BigInteger(const std::string &s): digits(), negative(false)
 
 compare_t BigInteger::_compare(const BigInteger &a) const
 {
-    if (negative && !a.negative)
+    if(negative && !a.negative)
         return CMP_LESS;
-    if (!negative && a.negative)
+    if(!negative && a.negative)
         return CMP_GREATER;
     return static_cast<compare_t>(_compareAbs(a) * (negative ? -1 : 1));
 }
 
 std::string BigInteger::toString() const
 {
-    if (digits.empty())
+    if(digits.empty())
         return "0";
     std::string res = (negative ? "-" : "");
-    for (auto i = digits.rbegin(); i != digits.rend(); ++i)
+    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
     {
         std::string temp = ::toString(*i);
-        if (i != digits.rbegin())
+        if(i != digits.rbegin())
         {
-            while (temp.length() < BLOCK_SIZE)
+            while(temp.length() < BLOCK_SIZE)
             {
                 temp = "0" + temp;
             }
@@ -221,11 +221,11 @@ BigInteger &BigInteger::operator+=(const BigInteger &a)
 {
     bool sub = negative ^a.negative;
     int rem = 0;
-    if (!sub)  // addition
+    if(!sub)  // addition
     {
-        for (size_t i = 0; i < std::max(a.digits.size(), digits.size()) || rem; ++i)
+        for(size_t i = 0; i < std::max(a.digits.size(), digits.size()) || rem; ++i)
         {
-            if (digits.size() <= i)
+            if(digits.size() <= i)
                 digits.push_back(0);
             digits[i] = digits[i] + (a.digits.size() > i ? a.digits[i] : 0) + rem;
             rem = digits[i] / BLOCK_MOD;
@@ -237,12 +237,12 @@ BigInteger &BigInteger::operator+=(const BigInteger &a)
         bool rev = _compareAbs(a) < 0;
         const BigInteger &big = (rev ? a : *this), &small = (rev ? *this : a);
         negative = big.negative;
-        for (size_t i = 0; i < a.digits.size() || rem; ++i)
+        for(size_t i = 0; i < a.digits.size() || rem; ++i)
         {
-            if (digits.size() <= i)
+            if(digits.size() <= i)
                 digits.push_back(0);
             unsigned dig = (small.digits.size() > i ? small.digits[i] : 0);
-            if (big.digits[i] >= dig + rem)
+            if(big.digits[i] >= dig + rem)
             {
                 digits[i] = big.digits[i] - dig - rem;
                 rem = 0;
@@ -261,15 +261,15 @@ BigInteger &BigInteger::operator+=(const BigInteger &a)
 BigInteger &BigInteger::operator*=(BigInteger a)
 {
     bool neg = negative ^a.negative;
-    if (_compareAbs(a) == CMP_LESS)
+    if(_compareAbs(a) == CMP_LESS)
     {
         std::swap(*this, a);
     }
-    if (!a.digits.size())
+    if(!a.digits.size())
     {
         digits.clear();
     }
-    else if (a.digits.size() == 1)
+    else if(a.digits.size() == 1)
     {
         multiply(a.digits[0]);
     }
@@ -284,15 +284,15 @@ BigInteger &BigInteger::operator*=(BigInteger a)
 
 BigInteger &BigInteger::operator/=(const BigInteger &a)
 {
-    if (!a)
+    if(!a)
         throw zero_division_error("Integer division by zero");
-    if (a.digits.size() <= 1)
+    if(a.digits.size() <= 1)
     {
         int temp;
         _divide(a.digits[0], temp);
         return *this;
     }
-    bool neg = a.negative ^ negative;
+    bool neg = a.negative ^negative;
     *this = _divide_long(a);
     negative = neg;
     normalize();
@@ -368,23 +368,23 @@ std::istream &operator>>(std::istream &in, BigInteger &a)
 const BigInteger gcd(BigInteger a, BigInteger b)
 {
     BigInteger d = 1;
-    while (a && b)
+    while(a && b)
     {
-        if (!a.odd() && !b.odd())
+        if(!a.odd() && !b.odd())
         {
             d *= 2;
             a /= 2;
             b /= 2;
         }
-        else if (!a.odd())
+        else if(!a.odd())
         {
             a /= 2;
         }
-        else if (!b.odd())
+        else if(!b.odd())
         {
             b /= 2;
         }
-        else if (a >= b)
+        else if(a >= b)
         {
             a -= b;
         }

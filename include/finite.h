@@ -14,9 +14,9 @@ public:
 
     Finite(const BigInteger &n): val(n)
     {
-        if (val >= _FINITE_ORDER)
+        if(val >= _FINITE_ORDER)
             val %= _FINITE_ORDER;
-        if (val < 0)
+        if(val < 0)
             val = _FINITE_ORDER - ((0ll - val - 1) % _FINITE_ORDER + 1);
     }
 
@@ -52,7 +52,7 @@ public:
     Finite &operator+=(const Finite &a)
     {
         BigInteger nval = val + a.val;
-        if (nval >= _FINITE_ORDER)
+        if(nval >= _FINITE_ORDER)
         {
             nval -= _FINITE_ORDER;
         }
@@ -69,7 +69,7 @@ public:
     Finite &operator-=(const Finite &a)
     {
         BigInteger nval = val - a.val;
-        if (nval < 0)
+        if(nval < 0)
         {
             nval += _FINITE_ORDER;
         }
@@ -86,7 +86,7 @@ public:
     Finite &operator*=(const Finite &a)
     {
         BigInteger nval = val * a.val;
-        if (nval >= _FINITE_ORDER)
+        if(nval >= _FINITE_ORDER)
         {
             nval %= _FINITE_ORDER;
         }

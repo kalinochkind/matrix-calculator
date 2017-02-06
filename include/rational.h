@@ -140,4 +140,5 @@ const Rational operator/(const Rational &a, const Rational &b);
 std::ostream &operator<<(std::ostream &out, const Rational &a);
 
 std::istream &operator>>(std::istream &in, Rational &a);
+
 #endif

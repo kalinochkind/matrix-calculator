@@ -1,7 +1,6 @@
 #include "matrix.h"
 #include "parser.h"
 #include "finite.h"
-#include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
@@ -244,9 +243,9 @@ void f_expr()
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
                     {"id",        {1, [](const vector<NumMatrix *> &a) {
-                        if(!a[0]->is_int)
+                        if(!a[0]->is_int || a[0]->im <= 0)
                             die("Invalid use of id");
-                        return NumMatrix(Matrix<Field>::identity(int(abs(a[0]->im))));
+                        return NumMatrix(Matrix<Field>::identity(int(a[0]->im)));
                     }}},
                     {"=",         {2, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix() == a[1]->toMatrix());

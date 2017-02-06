@@ -124,11 +124,15 @@ public:
 const BigInteger operator+(const BigInteger &a, const BigInteger &b);
 
 const BigInteger operator-(const BigInteger &a, const BigInteger &b);
+
 const BigInteger operator*(const BigInteger &a, const BigInteger &b);
 
 const BigInteger operator/(const BigInteger &a, const BigInteger &b);
+
 const BigInteger operator%(const BigInteger &a, const BigInteger &b);
+
 std::ostream &operator<<(std::ostream &out, const BigInteger &a);
+
 std::istream &operator>>(std::istream &in, BigInteger &a);
 
 inline bool operator<(const BigInteger &a, const BigInteger &b)
@@ -171,7 +175,5 @@ const BigInteger abs(const BigInteger &a);
 const BigInteger gcd(BigInteger a, BigInteger b);
 
 std::pair<BigInteger, BigInteger> ext_gcd(BigInteger a, BigInteger b);
-
-
 
 #endif

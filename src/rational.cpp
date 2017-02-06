@@ -2,7 +2,7 @@
 
 void Rational::normalize()
 {
-    if (_denominator < 0)
+    if(_denominator < 0)
     {
         _denominator = -_denominator;
         _numerator = -_numerator;
@@ -22,21 +22,21 @@ Rational::Rational(const std::string &s): _numerator(), _denominator()
 {
     size_t i = 0;
     std::string s1, s2;
-    for (; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
+    for(; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
     {
         s1.push_back(s[i]);
     }
-    if (i >= s.size())
+    if(i >= s.size())
     {
         *this = Rational(BigInteger(s1));
         return;
     }
     char c = s[i++];
-    for (; i < s.size(); ++i)
+    for(; i < s.size(); ++i)
     {
         s2.push_back(s[i]);
     }
-    if (c == '/')
+    if(c == '/')
     {
         *this = Rational(BigInteger(s1), BigInteger(s2));
         return;
@@ -44,7 +44,7 @@ Rational::Rational(const std::string &s): _numerator(), _denominator()
     else
     {
         Rational fr = Rational(BigInteger(s2), BigInteger('1' + std::string(s2.size(), '0')));
-        if (s1.size() && s1[0] == '-')
+        if(s1.size() && s1[0] == '-')
             fr = -fr;
         *this = Rational(BigInteger(s1)) + fr;
     }
@@ -74,7 +74,7 @@ Rational &Rational::operator*=(const Rational &a)
 
 Rational &Rational::operator/=(const Rational &a)
 {
-    if (!a._numerator)
+    if(!a._numerator)
         throw zero_division_error("Rational division by zero");
     _numerator *= a._denominator;
     _denominator *= a._numerator;
@@ -85,20 +85,20 @@ Rational &Rational::operator/=(const Rational &a)
 const std::string Rational::asDecimal(size_t precision) const
 {
     BigInteger newnum = _numerator;
-    for (unsigned i = 0; i < precision; ++i)
+    for(unsigned i = 0; i < precision; ++i)
     {
         newnum *= 10;
     }
     std::string result = abs(newnum / _denominator).toString();
-    if (result.size() < precision + 1)
+    if(result.size() < precision + 1)
     {
         result = std::string(precision + 1 - result.size(), '0') + result;
     }
-    if (precision)
+    if(precision)
         result.insert(result.end() - precision, '.');
     while(precision && result.back() == '0')
         result.pop_back();
-    if (_numerator < 0)
+    if(_numerator < 0)
         result = "-" + result;
     return result;
 }
