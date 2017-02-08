@@ -338,6 +338,17 @@ public:
         return temp *= a;
     }
 
+    Matrix &operator/=(Field a)
+    {
+        return operator*=(Field(1) / a);
+    }
+
+    const Matrix operator/(Field a) const
+    {
+        Matrix temp(*this);
+        return temp /= a;
+    }
+
     Matrix &operator*=(const Matrix &a)
     {
         return *this = *this * a;
@@ -557,6 +568,13 @@ public:
             }
         }
         return res;
+    }
+
+    void swap(Matrix &a)
+    {
+        std::swap(arr, a.arr);
+        std::swap(M, a.M);
+        std::swap(N, a.N);
     }
 };
 

@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include "parser.h"
 #include "finite.h"
+#include "polynom.h"
 #include <map>
 #include <set>
 #include <sstream>
@@ -307,6 +308,10 @@ void f_expr()
                         Matrix<Field> m = a[0]->toMatrix();
                         m.gauss();
                         return NumMatrix(m);
+                    }}},
+                    {"gcd",       {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        return NumMatrix(p1.gcd(p2).toMatrix());
                     }}}
             };
     cout << "Expression: ";
