@@ -88,6 +88,7 @@ public:
         m = Matrix<Field>(1, v.size());
         for(unsigned i = 0; i < v.size(); ++i)
             m[0][i] = v[i];
+        strip();
     }
 
     const Matrix<Field> toMatrix() const
