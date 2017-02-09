@@ -89,74 +89,132 @@ void processOp(string op, vector<NumMatrix> &st,
     }
 }
 
+enum class NumMatrixType
+{
+    number, matrix, polynom
+};
+
 template<class Field>
 struct _NumMatrix
 {
     BigInteger im;
     Matrix<Field> fm;
-    bool is_int;
+    Polynom<Field> pm;
+    NumMatrixType type;
 
-    _NumMatrix(): im(0), fm(), is_int(true) {}
+    _NumMatrix(): im(0), fm(), pm(), type(NumMatrixType::number) {}
 
-    _NumMatrix(const _NumMatrix &a): im(a.im), fm(a.fm), is_int(a.is_int) {}
+    _NumMatrix(const _NumMatrix &a): im(a.im), fm(a.fm), pm(a.pm), type(a.type) {}
 
-    _NumMatrix(const BigInteger &a): im(a), fm(), is_int(true) {}
+    _NumMatrix(const BigInteger &a): im(a), fm(), pm(), type(NumMatrixType::number) {}
 
-    _NumMatrix(unsigned a): im(a), fm(), is_int(true) {}
+    _NumMatrix(unsigned a): im(a), fm(), pm(), type(NumMatrixType::number) {}
 
-    _NumMatrix(const Matrix<Field> &a): im(0), fm(a), is_int(false) {}
+    _NumMatrix(int a): im(a), fm(), pm(), type(NumMatrixType::number) {}
 
-    _NumMatrix(const Field &a): im(0), fm(Matrix<Field>::fromNumber(a)), is_int(false) {}
+    _NumMatrix(const Matrix<Field> &a): im(0), fm(a), pm(), type(NumMatrixType::matrix) {}
+
+    _NumMatrix(const Polynom<Field> &a): im(0), fm(), pm(a), type(NumMatrixType::polynom) {}
+
+    _NumMatrix(const Field &a): im(0), fm(Matrix<Field>::fromNumber(a)), pm(), type(NumMatrixType::matrix) {}
 
     _NumMatrix &operator=(const _NumMatrix &a)
     {
-        is_int = a.is_int;
+        type = a.type;
         im = a.im;
         fm = a.fm;
+        pm = a.pm;
         return *this;
     }
 
     Matrix<Field> toMatrix() const
     {
-        if(is_int)
+        if(type == NumMatrixType::number)
             return Matrix<Field>::fromNumber(Field(im));
+        else if(type == NumMatrixType::polynom)
+            return pm.toMatrix();
         else
             return fm;
     }
 
-    _NumMatrix operator*(const _NumMatrix &m) const
+    const _NumMatrix operator*(const _NumMatrix &m) const
     {
-        if(is_int && m.is_int)
-            return im * m.im;
-        if(is_int)
-            return m.fm * Field(im);
-        if(m.is_int)
-            return fm * Field(m.im);
-        if(fm.width() == 1 && fm.height() == 1)
-            return m.fm * fm[0][0];
-        if(m.fm.width() == 1 && m.fm.height() == 1)
-            return fm * m.fm[0][0];
-        return fm * m.fm;
+        switch(type)
+        {
+            case NumMatrixType::number:
+                if(m.type == NumMatrixType::number)
+                    return im * m.im;
+                if(m.type == NumMatrixType::matrix)
+                    return m.fm * Field(im);
+                return m.pm * Field(im);
+            case NumMatrixType::matrix:
+                if(m.type == NumMatrixType::number)
+                    return fm * Field(m.im);
+                if(m.type == NumMatrixType::matrix)
+                {
+                    if(fm.width() == 1 && fm.height() == 1)
+                        return m.fm * fm[0][0];
+                    else if(m.fm.width() == 1 && m.fm.height() == 1)
+                        return fm * m.fm[0][0];
+                    else
+                        return fm * m.fm;
+                }
+                if(fm.width() == 1 && fm.height() == 1)
+                    return m.pm * fm[0][0];
+                die("Matrix * polynom is undefined");
+            case NumMatrixType::polynom:
+                if(m.type == NumMatrixType::number)
+                    return pm * Field(m.im);
+                if(m.type == NumMatrixType::matrix)
+                {
+                    if(m.fm.width() == 1 && m.fm.height() == 1)
+                        return pm * m.fm[0][0];
+                    else
+                        die("Polynom * matrix is undefined");
+                }
+                return pm * m.pm;
+        }
+        return 0;
     }
 
-    _NumMatrix operator/(const _NumMatrix &m) const
+    const _NumMatrix operator/(const _NumMatrix &m) const
     {
-        return operator*(m.toMatrix().inverted());
+        if(m.type == NumMatrixType::number || m.type == NumMatrixType::matrix)
+            return operator*(m.toMatrix().inverted());
+        if(type == NumMatrixType::polynom)
+            return pm / m.pm;
+        if(type == NumMatrixType::matrix && (fm.width() != 1 || fm.height() != 1))
+            die("Polynom / matrix is undefined");
+        return pm * m.toMatrix().inverted()[0][0];
     }
 
-    _NumMatrix operator+(const _NumMatrix &m) const
+    const _NumMatrix operator%(const _NumMatrix &m) const
     {
-        if(is_int && m.is_int)
+        if(m.type == NumMatrixType::number || m.type == NumMatrixType::matrix)
+            return im % m.im;
+        if(type == NumMatrixType::polynom && m.type == NumMatrixType::polynom)
+            return pm % m.pm;
+        die("Invalid use of %");
+        return 0;
+    }
+
+    const _NumMatrix operator+(const _NumMatrix &m) const
+    {
+        if(type == NumMatrixType::number && m.type == NumMatrixType::number)
             return im + m.im;
+        if(type == NumMatrixType::polynom && m.type == NumMatrixType::polynom)
+            return pm + m.pm;
         return toMatrix() + m.toMatrix();
     }
 
-    _NumMatrix operator-() const
+    const _NumMatrix operator-() const
     {
-        if(is_int)
+        if(type == NumMatrixType::number)
             return -im;
-        else
+        else if(type == NumMatrixType::matrix)
             return -fm;
+        else
+            return -pm;
     }
 
 };
@@ -220,7 +278,9 @@ void f_expr()
             {
                     {"+",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + *a[1]; }}},
                     {"^",         {2, [](const vector<NumMatrix *> &a) {
-                        if(a[1]->is_int)
+                        if(a[0]->type == NumMatrixType::polynom || a[1]->type == NumMatrixType::polynom)
+                            die("^ is not supported for polynoms");
+                        if(a[1]->type == NumMatrixType::number)
                             return NumMatrix(a[0]->toMatrix().power(a[1]->im));
                         Matrix<Field> m = a[1]->toMatrix();
                         if(m.height() != 1 || m.width() != 1)
@@ -233,6 +293,9 @@ void f_expr()
                     {"/",         {2, [](const vector<NumMatrix *> &a) {
                         return *a[0] / *a[1];
                     }}},
+                    {"%",         {2, [](const vector<NumMatrix *> &a) {
+                        return *a[0] % *a[1];
+                    }}},
                     {"-",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + -*a[1]; }}},
                     {"_",         {1, [](const vector<NumMatrix *> &a) { return -*a[0]; }}},
                     {"det",       {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().det()); }}},
@@ -244,7 +307,7 @@ void f_expr()
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
                     {"id",        {1, [](const vector<NumMatrix *> &a) {
-                        if(!a[0]->is_int || a[0]->im <= 0)
+                        if(a[0]->type != NumMatrixType::number || a[0]->im <= 0)
                             die("Invalid use of id");
                         return NumMatrix(Matrix<Field>::identity(int(a[0]->im)));
                     }}},
@@ -272,7 +335,7 @@ void f_expr()
                         return NumMatrix(right.transposed());
                     }}},
                     {"at",        {3, [](const vector<NumMatrix *> &a) {
-                        if(!a[1]->is_int || !a[2]->is_int)
+                        if(a[1]->type != NumMatrixType::number || a[2]->type != NumMatrixType::number)
                             die("Invalid use of at");
                         if(a[1]->im < 0 || a[1]->im >= int(a[0]->toMatrix().height()) ||
                            a[2]->im < 0 || a[2]->im >= int(a[0]->toMatrix().width()))
@@ -280,8 +343,10 @@ void f_expr()
                         return NumMatrix(a[0]->toMatrix()[int(a[1]->im)][int(a[2]->im)]);
                     }}},
                     {"int",       {1, [](const vector<NumMatrix *> &a) {
-                        if(a[0]->is_int)
+                        if(a[0]->type == NumMatrixType::number)
                             return *a[0];
+                        if(a[0]->type == NumMatrixType::polynom)
+                            die("at: number or matrix 1*1 required");
                         if(a[0]->fm.width() != 1 || a[0]->fm.height() != 1)
                             die("int: matrix 1*1 required");
                         return NumMatrix(int(a[0]->fm[0][0]));
@@ -312,7 +377,15 @@ void f_expr()
                     {"gcd",       {2, [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         return NumMatrix(p1.gcd(p2).toMatrix());
-                    }}}
+                    }}},
+                    {"degree",    {1, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix());
+                        return NumMatrix(p1.degree());
+                    }}},
+                    {"polynom",   {1, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix());
+                        return NumMatrix(p1);
+                    }}},
             };
     cout << "Expression: ";
     string s = safeGetline();
@@ -327,6 +400,9 @@ void f_expr()
     {
         switch(i.first)
         {
+            case TOKEN_POLY:
+                ++st_size;
+                break;
             case TOKEN_DOLLAR:
                 dollar = true;
                 break;
@@ -400,6 +476,9 @@ void f_expr()
                 istringstream is, iis;
                 switch(i.first)
                 {
+                    case TOKEN_POLY:
+                        st.push_back(NumMatrix(Polynom<Field>(i.second)));
+                        break;
                     case TOKEN_NUMBER:
                         is.str(i.second);
                         is >> tt;
