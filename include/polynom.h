@@ -216,6 +216,7 @@ public:
             p1 -= p2 * f;
             temp.m[0][temp.m.width() - pow - 1] = f;
             p1.strip();
+            p1.extend(pow + a.m.width() - 1);
         }
         return temp;
     }
