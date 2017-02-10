@@ -102,6 +102,8 @@ public:
 
     const Finite inverse() const
     {
+        if(!val)
+            throw zero_division_error("Trying to invert zero");
         auto p = ext_gcd(val, _FINITE_ORDER);
         return Finite(p.first);
     }

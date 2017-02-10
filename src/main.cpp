@@ -386,6 +386,12 @@ void f_expr()
                         Polynom<Field> p1(a[0]->toMatrix());
                         return NumMatrix(p1);
                     }}},
+                    {"divmod", {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        Polynom<Field> div = p1 / p2, mod = p1 % p2;
+                        unsigned mx = std::max(div.degree(), mod.degree()) + 1;
+                        return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
+                    }}}
             };
     cout << "Expression: ";
     string s = safeGetline();

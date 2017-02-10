@@ -91,9 +91,13 @@ public:
         strip();
     }
 
-    const Matrix<Field> toMatrix() const
+    const Matrix<Field> toMatrix(unsigned min_width = 0) const
     {
-        return m;
+        if(min_width <= m.width())
+            return m;
+        Polynom t(*this);
+        t.extend(min_width);
+        return t.m;
     }
 
     void swap(Polynom &a)

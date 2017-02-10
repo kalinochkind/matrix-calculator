@@ -119,17 +119,22 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             ans.push_back({TOKEN_DOLLAR, ""});
             last = TOKEN_DOLLAR;
         }
-        else if(i == '"')
+        else if(i == '"' || i == '\'')
         {
             if(poly.size())
             {
+                if(poly[0] != i)
+                {
+                    ans.clear();
+                    return ans;
+                }
                 ans.push_back({TOKEN_POLY, poly.substr(1)});
                 poly = "";
                 last = TOKEN_POLY;
             }
             else
             {
-                poly = "\"";
+                poly = i;
                 num = func = "";
             }
         }
