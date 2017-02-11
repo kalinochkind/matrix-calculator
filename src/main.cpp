@@ -15,6 +15,16 @@ void die(const string &s)
     exit(1);
 }
 
+bool isdigit(const string &s)
+{
+    for(char i : s)
+    {
+        if(i < '0' || i > '9')
+            return false;
+    }
+    return not s.empty();
+}
+
 string safeGetline()
 {
     string s;
@@ -271,7 +281,7 @@ void printDecimalResult(const Rational &a)
 
 
 template<class Field>
-void f_expr()
+void f_expr(string expr)
 {
     typedef _NumMatrix<Field> NumMatrix;
     map<string, pair<int, NumMatrix (*)(const vector<NumMatrix *> &)> > operations =
@@ -393,8 +403,16 @@ void f_expr()
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}}
             };
-    cout << "Expression: ";
-    string s = safeGetline();
+    string s;
+    if(expr.empty())
+    {
+        cout << "Expression: ";
+        s = safeGetline();
+    }
+    else
+    {
+        s = expr;
+    }
     auto v = splitExpression(s);
     map<char, NumMatrix> mmap;
     set<char> repeated;
@@ -474,7 +492,9 @@ void f_expr()
     Rational tt;
     do
     {
-        cout << endl;
+        if(expr.empty())
+            cout << endl;
+        expr = "";
         try
         {
             for(pair<token_type, string> &i : v)
@@ -568,18 +588,22 @@ int main(int argc, char **argv)
 {
     try
     {
-        if(argc == 1)
+        string arg1 = (argc > 1 ? argv[1] : "");
+        string arg2 = (argc > 2 ? argv[2] : "");
+        if(isdigit(arg2) && !isdigit(arg1))
+            swap(arg1, arg2);
+        if(isdigit(arg1))
         {
-            f_expr<Rational>();
-        }
-        else
-        {
-            _FINITE_ORDER = BigInteger(argv[1]);
+            _FINITE_ORDER = BigInteger(arg1);
             if(_FINITE_ORDER < 2)
                 die("Order must be at least 2");
             /*if(!_FINITE_ORDER.isPrime())
                 cout << "WARNING: finite field order is not prime\n";*/
-            f_expr<Finite>();
+            f_expr<Finite>(arg2);
+        }
+        else
+        {
+            f_expr<Rational>(arg1);
         }
     }
     catch(matrix_error e)
