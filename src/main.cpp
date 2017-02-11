@@ -171,6 +171,8 @@ struct _NumMatrix
                 }
                 if(fm.width() == 1 && fm.height() == 1)
                     return m.pm * fm[0][0];
+                if(pm.degree() < 1)
+                    return fm * m.pm.toMatrix()[0][0];
                 die("Matrix * polynom is undefined");
             case NumMatrixType::polynom:
                 if(m.type == NumMatrixType::number)
@@ -179,6 +181,8 @@ struct _NumMatrix
                 {
                     if(m.fm.width() == 1 && m.fm.height() == 1)
                         return pm * m.fm[0][0];
+                    else if(pm.degree() < 1)
+                        return m.fm * pm.toMatrix()[0][0];
                     else
                         die("Polynom * matrix is undefined");
                 }
@@ -386,7 +390,13 @@ void f_expr(string expr)
                     }}},
                     {"gcd",       {2, [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
-                        return NumMatrix(p1.gcd(p2).toMatrix());
+                        if(p1.degree() < 1 && p2.degree() < 1)
+                        {
+                            BigInteger i1(p1.toMatrix()[0][0]);
+                            BigInteger i2(p2.toMatrix()[0][0]);
+                            return NumMatrix(gcd(i1, i2));
+                        }
+                        return NumMatrix(p1.gcd(p2));
                     }}},
                     {"degree",    {1, [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix());
