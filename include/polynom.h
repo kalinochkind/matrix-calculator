@@ -115,24 +115,19 @@ public:
         return -1;
     }
 
+    explicit operator bool() const
+    {
+        return degree() >= 0;
+    }
+
     const Polynom gcd(const Polynom &p) const
     {
         Polynom p1(*this), p2(p), p3;
-        if(p1.m[0][0] == 0 || p2.m[0][0] == 0)
-            return Polynom();
-        p1.extend(p2.m.width());
-        p2.extend(p1.m.width());
-        while(p1 != p2)
+        while(p2)
         {
-            if(p1 < p2)
-                p1.swap(p2);
-            p3 = p2;
-            p3.multiplyX(p1.degree() - p3.degree());
-            p1.m -= p3.m;
-            p1.normalize();
-            p2.normalize();
-            p1.extend(p2.m.width());
-            p2.extend(p1.m.width());
+            p3 = p1 % p2;
+            p1 = p2;
+            p2 = p3;
         }
         return p1;
     }
