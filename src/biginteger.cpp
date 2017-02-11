@@ -184,6 +184,8 @@ BigInteger::BigInteger(const std::string &s): digits(), negative(false)
             temp = 0;
         }
     }
+    if(s == "-")
+        temp = 1;
     digits.push_back(temp);
     normalize();
 }

@@ -126,6 +126,7 @@ public:
         while(p2)
         {
             p3 = p1 % p2;
+            p3.normalize();
             p1 = p2;
             p2 = p3;
         }
@@ -229,6 +230,19 @@ public:
     {
         Polynom temp = *this / a * a;
         return *this - temp;
+    }
+
+    const Polynom diff() const
+    {
+        int t = degree();
+        if(t < 1)
+            return Polynom();
+        Polynom ans(t);
+        for(int i=1;i<=t;++i)
+        {
+            ans.m[0][ans.m.width() - i] = m[0][m.width() - i - 1] * i;
+        }
+        return ans;
     }
 
 };

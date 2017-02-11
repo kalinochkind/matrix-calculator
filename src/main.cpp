@@ -401,7 +401,11 @@ void f_expr(string expr)
                         Polynom<Field> div = p1 / p2, mod = p1 % p2;
                         unsigned mx = std::max(div.degree(), mod.degree()) + 1;
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
-                    }}}
+                    }}},
+                    {"diff", {1, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p(a[0]->toMatrix());
+                        return NumMatrix(p.diff());
+                    }}},
             };
     string s;
     if(expr.empty())
