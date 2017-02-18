@@ -96,6 +96,8 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = "";
+            if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
+                ans.push_back({TOKEN_OP, "*"});
             func.push_back(i);
             last = TOKEN_FUNC;
         }
