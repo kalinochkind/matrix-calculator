@@ -36,21 +36,9 @@ public:
         return _numerator;
     }
 
-    void numerator(const BigInteger &a)
-    {
-        _numerator = a;
-        normalize();
-    }
-
     const BigInteger denominator() const
     {
         return _denominator;
-    }
-
-    void denominator(const BigInteger &a)
-    {
-        _denominator = a;
-        normalize();
     }
 
     std::string toString() const;

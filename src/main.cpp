@@ -76,27 +76,26 @@ FMatrix getMatrix(string prompt)
 }
 
 template<class NumMatrix>
-void processOp(string op, vector<NumMatrix> &st,
+void processOp(string op, vector<NumMatrix> &st, size_t opcount,
                map<string, pair<int, NumMatrix (*)(const vector<NumMatrix *> &)> > &operations)
 {
-    if(operations[op].first == 1)
+    if(!opcount)
     {
-        st.back() = operations[op].second({&st.back()});
+        if(operations[op].first <= 0)
+            die("Invalid number of arguments: " + op);
+        opcount = operations[op].first;
     }
-    else if(operations[op].first == 2)
+    vector<NumMatrix*> args;
+    for(;opcount;--opcount)
     {
-        NumMatrix a = st.back();
-        st.pop_back();
-        st.back() = operations[op].second({&st.back(), &a});
+        args.push_back(&st[st.size() - opcount]);
     }
-    else
+    auto res = operations[op].second(args);
+    for(size_t i=0;i<args.size();++i)
     {
-        NumMatrix a = st.back();
         st.pop_back();
-        NumMatrix b = st.back();
-        st.pop_back();
-        st.back() = operations[op].second({&st.back(), &b, &a});
     }
+    st.push_back(res);
 }
 
 enum class NumMatrixType
@@ -283,6 +282,17 @@ void printDecimalResult(const Rational &a)
     cout << "\nDecimal:\n" << a.asDecimal(30) << endl;
 }
 
+template<class Field>
+Polynom<Field> gcd2(const Polynom<Field> &a, const Polynom<Field> &b)
+{
+    if(a.degree() < 1 && b.degree() < 1)
+    {
+        BigInteger i1(a.toMatrix()[0][0]);
+        BigInteger i2(a.toMatrix()[0][0]);
+        return Polynom<Field>(Field(gcd(i1, i2)));
+    }
+    return a.gcd(b);
+}
 
 template<class Field>
 void f_expr(string expr)
@@ -377,26 +387,28 @@ void f_expr(string expr)
                             die("revcfrac: matrix 1*n required");
                         return NumMatrix(f_revcfrac(m));
                     }}},
-                    {"joinh",     {2, [](const vector<NumMatrix *> &a) {
-                        return NumMatrix(a[0]->toMatrix().joinHorizontal(a[1]->toMatrix()));
+                    {"joinh",     {-1, [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> res = a[0]->toMatrix();
+                        for(size_t i=1;i<a.size();++i)
+                            res = res.joinHorizontal(a[i]->toMatrix());
+                        return NumMatrix(res);
                     }}},
-                    {"joinv",     {2, [](const vector<NumMatrix *> &a) {
-                        return NumMatrix(a[0]->toMatrix().joinVertical(a[1]->toMatrix()));
+                    {"joinv",     {-1, [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> res = a[0]->toMatrix();
+                        for(size_t i=1;i<a.size();++i)
+                            res = res.joinVertical(a[i]->toMatrix());
+                        return NumMatrix(res);
                     }}},
                     {"gauss",     {1, [](const vector<NumMatrix *> &a) {
                         Matrix<Field> m = a[0]->toMatrix();
                         m.gauss();
                         return NumMatrix(m);
                     }}},
-                    {"gcd",       {2, [](const vector<NumMatrix *> &a) {
-                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
-                        if(p1.degree() < 1 && p2.degree() < 1)
-                        {
-                            BigInteger i1(p1.toMatrix()[0][0]);
-                            BigInteger i2(p2.toMatrix()[0][0]);
-                            return NumMatrix(gcd(i1, i2));
-                        }
-                        return NumMatrix(p1.gcd(p2));
+                    {"gcd",       {-1, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p(a[0]->toMatrix());
+                        for(size_t i=1;i<a.size();++i)
+                            p = gcd2(p, Polynom<Field>(a[i]->toMatrix()));
+                        return NumMatrix(p);
                     }}},
                     {"degree",    {1, [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix());
@@ -432,7 +444,8 @@ void f_expr(string expr)
     set<char> repeated;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
-    int st_size = 0;
+    vector<size_t> st_height;
+    size_t st_size = 0;
     bool dollar = false;
     for(pair<token_type, string> &i : v)
     {
@@ -463,6 +476,8 @@ void f_expr(string expr)
             case TOKEN_FUNC:
                 if(!operations.count(i.second))
                     die("Invalid function: " + i.second);
+                if(i.first == TOKEN_FUNC)
+                    st_height.push_back(st_size);
             case TOKEN_LEFTPAR:
                 opst.push_back(i);
                 break;
@@ -477,8 +492,14 @@ void f_expr(string expr)
                 opst.pop_back();
                 if(opst.size() && opst.back().first == TOKEN_FUNC)
                 {
-                    st_size -= operations[opst.back().second].first - 1;
+                    if(operations[opst.back().second].first > 0 &&
+                       st_size - operations[opst.back().second].first != st_height.back())
+                    {
+                        die("Invalid number of arguments: " + opst.back().second);
+                    }
+                    st_size = st_height.back() + 1;
                     opst.pop_back();
+                    st_height.pop_back();
                 }
                 break;
             case TOKEN_COMMA:
@@ -509,6 +530,7 @@ void f_expr(string expr)
         if(expr.empty())
             cout << endl;
         expr = "";
+        st_height.clear();
         try
         {
             for(pair<token_type, string> &i : v)
@@ -542,30 +564,33 @@ void f_expr(string expr)
                               priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
                               priority[int(opst.back().second[0])])
                         {
-                            processOp(opst.back().second, st, operations);
+                            processOp(opst.back().second, st, 0, operations);
                             opst.pop_back();
                         }
                     case TOKEN_FUNC:
+                        if(i.first == TOKEN_FUNC)
+                            st_height.push_back(st.size());
                     case TOKEN_LEFTPAR:
                         opst.push_back(i);
                         break;
                     case TOKEN_RIGHTPAR:
                         while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
                         {
-                            processOp(opst.back().second, st, operations);
+                            processOp(opst.back().second, st, 0, operations);
                             opst.pop_back();
                         }
                         opst.pop_back();
                         if(opst.size() && opst.back().first == TOKEN_FUNC)
                         {
-                            processOp(opst.back().second, st, operations);
+                            processOp(opst.back().second, st, st.size() - st_height.back(), operations);
+                            st_height.pop_back();
                             opst.pop_back();
                         }
                         break;
                     case TOKEN_COMMA:
                         while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
                         {
-                            processOp(opst.back().second, st, operations);
+                            processOp(opst.back().second, st, 0, operations);
                             opst.pop_back();
                         }
                         break;
@@ -574,7 +599,7 @@ void f_expr(string expr)
             }
             while(opst.size())
             {
-                processOp(opst.back().second, st, operations);
+                processOp(opst.back().second, st, 0, operations);
                 opst.pop_back();
             }
             auto res = st[0].toMatrix();

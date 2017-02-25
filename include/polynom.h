@@ -77,6 +77,11 @@ public:
         strip();
     }
 
+    explicit Polynom(const Field &f): m(1, 1)
+    {
+        m[0][0] = f;
+    }
+
     explicit Polynom(const std::string &s): m(1, 1)
     {
         std::istringstream iss;
