@@ -327,6 +327,14 @@ void f_expr(string expr)
                     {"trace",     {1, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().trace());
                     }}},
+                    {"diag",      {-1, [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> m(a.size());
+                        for(unsigned i=0;i<a.size();++i)
+                        {
+                            m[i][i] = a[i]->toMatrix()[0][0];
+                        }
+                        return NumMatrix(m);
+                    }}},
                     {"transpose", {1, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
@@ -444,8 +452,8 @@ void f_expr(string expr)
     set<char> repeated;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
-    vector<size_t> st_height;
-    size_t st_size = 0;
+    vector<ssize_t> st_height;
+    ssize_t st_size = 0;
     bool dollar = false;
     for(pair<token_type, string> &i : v)
     {
