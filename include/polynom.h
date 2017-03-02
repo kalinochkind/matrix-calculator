@@ -251,6 +251,68 @@ public:
         return ans;
     }
 
+    bool isOrdinal() const
+    {
+        for(unsigned i=0;i<m.width();++i)
+        {
+            if(m[0][i] != BigInteger(m[0][i]))
+                return false;
+            if(BigInteger(m[0][i]) < 0)
+                return false;
+        }
+        return true;
+    }
+
+    const Polynom ordinalAdd(const Polynom &a) const
+    {
+        if(!isOrdinal() || !a.isOrdinal())
+            throw matrix_error("Invalid ordinal");
+        if(a.degree() < 0)
+            return *this;
+        int degdiff = degree() - a.degree();
+        if(degdiff < 0)
+            return a;
+        Polynom x(degree() + 1);
+        for(int i=0;i<degdiff;++i)
+        {
+            x.m[0][i] = m[0][i];
+        }
+        x.m[0][degdiff] = m[0][degdiff] + a.m[0][0];
+        for(unsigned i=degdiff+1;i<x.m.width();++i)
+        {
+            x.m[0][i] = a.m[0][i - degdiff];
+        }
+        return x;
+    }
+
+    const Polynom ordinalMul(const Polynom &a) const
+    {
+        if(!isOrdinal() || !a.isOrdinal())
+            throw matrix_error("Invalid ordinal");
+        int deg = degree();
+        if(deg < 0)
+            return Polynom();
+        Polynom res(deg + a.degree() + 1);
+        for(unsigned i=0;i<a.m.width();++i)
+        {
+            unsigned pow = a.m.width() - i - 1;
+            if(pow > 0)
+            {
+                Polynom t(a.m[0][i]);
+                t.multiplyX(pow + deg);
+                res = res.ordinalAdd(t);
+            }
+            else if(a.m[0][i])
+            {
+                Polynom t(*this);
+                t.m[0][0] *= a.m[0][i];
+                res = res.ordinalAdd(t);
+            }
+        }
+        res.strip();
+        return res;
+    }
+
 };
 
 #endif

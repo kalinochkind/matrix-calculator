@@ -42,9 +42,12 @@ string safeGetline()
     return s;
 }
 
+bool last_error = false;
+
 template<class Field>
 Matrix<Field> getMatrix(string prompt)
 {
+    last_error = false;
     string s, sum;
     cout << prompt << endl;
     s = safeGetline();
@@ -442,6 +445,14 @@ void f_expr(string expr)
                         Polynom<Field> p(a[0]->toMatrix());
                         return NumMatrix(p.diff());
                     }}},
+                    {"ordadd", {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        return NumMatrix(p1.ordinalAdd(p2));
+                    }}},
+                    {"ordmul", {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        return NumMatrix(p1.ordinalMul(p2));
+                    }}},
             };
     string s;
     if(expr.empty())
@@ -624,10 +635,16 @@ void f_expr(string expr)
         }
         catch(matrix_error &e)
         {
+            if(last_error)
+                break;
+            last_error = true;
             cout << "Error: " << e.what() << endl;
         }
         catch(invalid_number_error &e)
         {
+            if(last_error)
+                break;
+            last_error = true;
             cout << e.what() << endl;
         }
         st.clear();
