@@ -170,11 +170,14 @@ BigInteger::BigInteger(const std::string &s): digits(), negative(false)
     unsigned pow = 1;
     for(auto i = s.crbegin(); i != s.crend(); ++i)
     {
-        if(*i == '-')
+        if(*i == '-' || *i == '+')
         {
-            negative = true;
+            if(*i == '-')
+                negative = true;
             continue;
         }
+        if(*i < '0' || *i > '9')
+            throw invalid_number_error("Invalid integer: " + s);
         temp += pow * (*i - '0');
         pow *= 10;
         if(pow == BLOCK_MOD)

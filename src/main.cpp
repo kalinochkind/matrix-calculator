@@ -616,9 +616,13 @@ void f_expr(string expr)
             if(res.width() == 1 && res.height() == 1)
                 printDecimalResult(res[0][0]);
         }
-        catch(matrix_error e)
+        catch(matrix_error &e)
         {
             cout << "Error: " << e.what() << endl;
+        }
+        catch(invalid_number_error &e)
+        {
+            cout << e.what() << endl;
         }
         st.clear();
         opst.clear();

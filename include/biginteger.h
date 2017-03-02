@@ -12,6 +12,11 @@ enum compare_t
     CMP_EQUAL = 0, CMP_LESS = -1, CMP_GREATER = 1
 };
 
+class invalid_number_error: public std::runtime_error
+{
+    using std::runtime_error::runtime_error;
+};
+
 class zero_division_error: public std::runtime_error
 {
     using std::runtime_error::runtime_error;

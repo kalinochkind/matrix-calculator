@@ -22,7 +22,7 @@ Rational::Rational(const std::string &s): _numerator(), _denominator()
 {
     size_t i = 0;
     std::string s1, s2;
-    for(; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-'); ++i)
+    for(; i < s.size() && (('0' <= s[i] && s[i] <= '9') || s[i] == '-' || s[i] == '+'); ++i)
     {
         s1.push_back(s[i]);
     }
@@ -34,6 +34,8 @@ Rational::Rational(const std::string &s): _numerator(), _denominator()
     char c = s[i++];
     for(; i < s.size(); ++i)
     {
+        if(s[i] < '0' || s[i] > '9')
+            throw invalid_number_error("Invalid rational: " + s);
         s2.push_back(s[i]);
     }
     if(c == '/')
@@ -41,13 +43,15 @@ Rational::Rational(const std::string &s): _numerator(), _denominator()
         *this = Rational(BigInteger(s1), BigInteger(s2));
         return;
     }
-    else
+    else if(c == '.')
     {
         Rational fr = Rational(BigInteger(s2), BigInteger('1' + std::string(s2.size(), '0')));
         if(s1.size() && s1[0] == '-')
             fr = -fr;
         *this = Rational(BigInteger(s1)) + fr;
     }
+    else
+        throw invalid_number_error("Invalid rational: " + s);
 }
 
 std::string Rational::toString() const
