@@ -42,8 +42,8 @@ string safeGetline()
     return s;
 }
 
-template<class FMatrix>
-FMatrix getMatrix(string prompt)
+template<class Field>
+Matrix<Field> getMatrix(string prompt)
 {
     string s, sum;
     cout << prompt << endl;
@@ -54,7 +54,7 @@ FMatrix getMatrix(string prompt)
         istringstream is;
         is.str(s);
         unsigned cwidth = 0;
-        Rational dummy;
+        Field dummy;
         while(is >> dummy)
             ++cwidth;
         if(!cwidth)
@@ -68,7 +68,7 @@ FMatrix getMatrix(string prompt)
         if(cin.eof())
             exit(0);
     }
-    FMatrix m(height, width);
+    Matrix<Field> m(height, width);
     istringstream is;
     is.str(sum);
     is >> m;
@@ -564,7 +564,7 @@ void f_expr(string expr)
                         break;
                     case TOKEN_MATRIX:
                         if(!mmap.count(i.second[0]))
-                            mmap[i.second[0]] = getMatrix<Matrix<Field>>(string("Matrix ") + i.second + ':');
+                            mmap[i.second[0]] = getMatrix<Field>(string("Matrix ") + i.second + ':');
                         st.push_back(mmap[i.second[0]]);
                         break;
                     case TOKEN_OP:
