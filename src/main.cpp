@@ -232,9 +232,10 @@ struct _NumMatrix
 
 };
 
-Matrix<Finite> f_cfrac(Finite a)
+Matrix<Finite> f_cfrac(Finite)
 {
-    return Matrix<Finite>::fromNumber(a);
+    die("cfrac is supported only for rationals");
+    return 0;
 }
 
 Matrix<Rational> f_cfrac(Rational a)
@@ -262,15 +263,20 @@ Matrix<Rational> f_cfrac(Rational a)
 }
 
 
-template<class T>
-T f_revcfrac(const Matrix<T> &a)
+Rational f_revcfrac(const Matrix<Rational> &a)
 {
-    T res = a[0][a.width() - 1];
+    Rational res = a[0][a.width() - 1];
     for(int i = int(a.width()) - 2; i >= 0; --i)
     {
-        res = T(1) / res + a[0][i];
+        res = 1 / res + a[0][i];
     }
     return res;
+}
+
+Finite f_revcfrac(const Matrix<Finite> &)
+{
+    die("rcfrac is supported only for rationals");
+    return 0;
 }
 
 void printDecimalResult(const Finite &) {}
@@ -392,7 +398,7 @@ void f_expr(string expr)
                     {"rcfrac",    {1, [](const vector<NumMatrix *> &a) {
                         auto m = a[0]->toMatrix();
                         if(m.height() != 1 || !m.width())
-                            die("revcfrac: matrix 1*n required");
+                            die("rcfrac: matrix 1*n required");
                         return NumMatrix(f_revcfrac(m));
                     }}},
                     {"joinh",     {-1, [](const vector<NumMatrix *> &a) {
