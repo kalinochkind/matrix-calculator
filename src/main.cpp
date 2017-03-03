@@ -453,6 +453,17 @@ void f_expr(string expr)
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         return NumMatrix(p1.ordinalMul(p2));
                     }}},
+                    {"ordsub", {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        return NumMatrix(p1.ordinalSub(p2));
+                    }}},
+                    {"orddiv", {2, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
+                        auto res = p1.ordinalDiv(p2);
+                        Polynom<Field> div = res.first, mod = res.second;
+                        unsigned mx = std::max(div.degree(), mod.degree()) + 1;
+                        return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
+                    }}},
             };
     string s;
     if(expr.empty())

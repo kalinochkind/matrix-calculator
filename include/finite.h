@@ -118,6 +118,16 @@ public:
         return *this * a.inverse();
     }
 
+    bool operator<(const Finite &) const
+    {
+        assert(false);
+    }
+
+    bool operator>(const Finite &) const
+    {
+        assert(false);
+    }
+
 };
 
 
