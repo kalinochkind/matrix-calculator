@@ -506,6 +506,74 @@ public:
         }
     }
 
+    const Matrix fundamental() const
+    {
+        Matrix m(*this);
+        unsigned rk = m.gauss();
+        std::vector<char> dependent(N);
+        std::vector<int> dep_height(N);
+        int last_nonzero = -1;
+        for(unsigned i=0;i<N;++i)
+        {
+            for(int j=M-1;j>last_nonzero;--j)
+            {
+                if(m[j][i])
+                {
+                    last_nonzero = j;
+                    dependent[i] = 1;
+                    dep_height[i] = j;
+                    break;
+                }
+            }
+        }
+        for(unsigned i=0;i<N;++i)
+        {
+            if(!dependent[i])
+                continue;
+            Field inv = Field(1) / m[dep_height[i]][i];
+            for(unsigned j=i;j<N;++j)
+            {
+                m[dep_height[i]][j] *= inv;
+            }
+            for(int j=0;j<dep_height[i];++j)
+            {
+                if(!m[j][i])
+                    continue;
+                for(unsigned q=i+1;q<N;++q)
+                {
+                    m[j][q] -= m[j][i] * m[dep_height[i]][q];
+                }
+                m[j][i] = 0;
+            }
+        }
+        Matrix ans(N, N - rk);
+        int cur = 0;
+        unsigned col = -1;
+        for(unsigned i=0;i<N;++i)
+        {
+            if(dependent[i])
+                continue;
+            do
+            {
+                ++col;
+            }
+            while(dependent[col]);
+            for(unsigned j=0;j<N;++j)
+            {
+                if(dependent[j])
+                {
+                    ans[j][cur] = -m[dep_height[j]][i];
+                }
+                else if(j == col)
+                {
+                    ans[j][cur] = 1;
+                }
+            }
+            ++cur;
+        }
+        return ans;
+    }
+
     const Matrix power(const BigInteger &pow) const
     {
         if(M != N)

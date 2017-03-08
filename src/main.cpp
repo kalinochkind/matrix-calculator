@@ -421,6 +421,10 @@ void f_expr(string expr)
                         m.gauss();
                         return NumMatrix(m);
                     }}},
+                    {"fund",     {1, [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> m = a[0]->toMatrix();
+                        return NumMatrix(m.fundamental());
+                    }}},
                     {"gcd",       {-1, [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p(a[0]->toMatrix());
                         for(size_t i=1;i<a.size();++i)
