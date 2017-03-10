@@ -651,13 +651,30 @@ std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
     if(!a.width() || !a.height())
         return out;
+    std::vector<std::vector<std::string>> strs(a.height());
+    std::vector<size_t> max_width(a.width());
     for(unsigned i = 0; i < a.height(); ++i)
     {
         for(unsigned j = 0; j < a.width(); ++j)
         {
-            out << a[i][j] << ' ';
+            std::string s = toString(a[i][j]);
+            strs[i].push_back(s);
+            max_width[j] = std::max(max_width[j], s.length());
         }
-        out << '\n';
+    }
+    for(unsigned i = 0; i < a.height(); ++i)
+    {
+        for(unsigned j = 0; j < a.width(); ++j)
+        {
+            if(j)
+                std::cout << ' ';
+            for(unsigned t=0;t+strs[i][j].length()<max_width[j];++t)
+            {
+                std::cout << ' ';
+            }
+            std::cout << strs[i][j];
+        }
+        std::cout << '\n';
     }
     return out;
 };

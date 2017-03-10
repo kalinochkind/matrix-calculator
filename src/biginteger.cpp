@@ -1,14 +1,6 @@
 #include "biginteger.h"
 #include <algorithm>
 
-template<class T>
-inline const std::string toString(const T &a)
-{
-    std::ostringstream os;
-    os << a;
-    return os.str();
-}
-
 void BigInteger::normalize()
 {
     while(digits.size() && digits.back() == 0)

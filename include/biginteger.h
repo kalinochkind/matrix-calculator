@@ -22,6 +22,15 @@ class zero_division_error: public std::runtime_error
     using std::runtime_error::runtime_error;
 };
 
+template<class T>
+inline const std::string toString(const T &a)
+{
+    std::ostringstream os;
+    os << a;
+    return os.str();
+}
+
+
 class BigInteger
 {
 private:
