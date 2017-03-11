@@ -362,18 +362,7 @@ void f_expr(string expr)
                         return NumMatrix(a[0]->toMatrix().height());
                     }}},
                     {"solve",     {1, [](const vector<NumMatrix *> &a) {
-                        Matrix<Field> m = a[0]->toMatrix();
-                        unsigned sz = m.width() - 1;
-                        //if (!sz || a[0]->toMatrix().width() != sz + 1)
-                        //    die("Invalid use of solve: N*N+1 matrix required");
-                        Matrix<Field> sys = m.submatrix(0, 0, m.height() - 1, sz - 1);
-                        Matrix<Field> right = m.submatrix(0, sz, m.height() - 1, sz);
-                        if(m.rank() != sys.rank())
-                        {
-                            throw matrix_error("No solutions");
-                        }
-                        sys.inverseExt(right);
-                        return NumMatrix(right.transposed());
+                        return NumMatrix(a[0]->toMatrix().partial());
                     }}},
                     {"at",        {3, [](const vector<NumMatrix *> &a) {
                         if(a[1]->type != NumMatrixType::number || a[2]->type != NumMatrixType::number)

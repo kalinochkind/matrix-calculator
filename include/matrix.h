@@ -574,6 +574,37 @@ public:
         return ans;
     }
 
+    const Matrix partial() const
+    {
+        if(N < 2)
+            throw matrix_error("Invalid matrix");
+        Matrix sys = submatrix(0, 0, M - 1, N - 2);
+        Matrix right = submatrix(0, N - 1, M - 1, N - 1);
+        Matrix ans(1, N - 1);
+        if(sys.gauss(&right) != rank())
+        {
+            throw matrix_error("No solutions");
+        }
+        int row = M - 1;
+        for(int col=N-2;col>=0;--col)
+        {
+            while(row >= 0 && !sys[row][col])
+                --row;
+            if(row < 0)
+                return ans;
+            Field cval = right[row][0] / sys[row][col];
+            if(!cval)
+                continue;
+            ans[0][col] = cval;
+            for(int i=0;i<=row;++i)
+            {
+                right[i][0] -= cval * sys[i][col];
+            }
+        }
+        return ans;
+
+    }
+
     const Matrix power(const BigInteger &pow) const
     {
         if(M != N)
