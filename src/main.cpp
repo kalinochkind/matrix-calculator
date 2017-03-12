@@ -6,13 +6,24 @@
 #include <set>
 #include <sstream>
 #include <cstdlib>
+#include <readline/readline.h>
 
 using namespace std;
+
+class end_of_input: public exception
+{
+    using exception::exception;
+};
+
+class invalid_expression: public exception
+{
+    using exception::exception;
+};
 
 void die(const string &s)
 {
     cout << s << endl;
-    exit(1);
+    throw invalid_expression();
 }
 
 bool isdigit(const string &s)
@@ -25,17 +36,25 @@ bool isdigit(const string &s)
     return not s.empty();
 }
 
-string safeGetline()
+string _readline(const string &prompt = "")
+{
+    char *cs = readline(prompt.c_str());
+    if(!cs)
+    {
+        cout << endl;
+        throw end_of_input();
+    }
+    string s = cs;
+    free(cs);
+    return s;
+}
+
+string safeGetline(const string &prompt = "")
 {
     string s;
     while(s.empty())
     {
-        getline(cin, s);
-        if(cin.eof())
-        {
-            cout << "\n";
-            exit(0);
-        }
+        s = _readline(prompt);
         while(s.size() && isspace(s.back()))
             s.pop_back();
     }
@@ -67,9 +86,7 @@ Matrix<Field> getMatrix(string prompt)
         width = cwidth;
         ++height;
         sum += s + ' ';
-        getline(cin, s);
-        if(cin.eof())
-            exit(0);
+        s = _readline();
     }
     Matrix<Field> m(height, width);
     istringstream is;
@@ -461,8 +478,7 @@ void f_expr(string expr)
     string s;
     if(expr.empty())
     {
-        cout << "Expression: ";
-        s = safeGetline();
+        s = safeGetline(">> ");
     }
     else
     {
@@ -651,6 +667,10 @@ void f_expr(string expr)
             last_error = true;
             cout << e.what() << endl;
         }
+        catch(end_of_input &e)
+        {
+            break;
+        }
         st.clear();
         opst.clear();
         for(char i : repeated)
@@ -677,17 +697,37 @@ int main(int argc, char **argv)
                 die("Order must be at least 2");
             /*if(!_FINITE_ORDER.isPrime())
                 cout << "WARNING: finite field order is not prime\n";*/
-            f_expr<Finite>(arg2);
+            do
+            {
+                try
+                {
+                    f_expr<Finite>(arg2);
+                }
+                catch(invalid_expression &e) {}
+            }
+            while(arg2.empty());
         }
         else
         {
-            f_expr<Rational>(arg1);
+            do
+            {
+                try
+                {
+                    f_expr<Rational>(arg1);
+                }
+                catch(invalid_expression &e) {}
+            }
+            while(arg1.empty());
         }
     }
     catch(matrix_error e)
     {
         cout << "Matrix error: " << e.what() << endl;
         return 1;
+    }
+    catch(end_of_input &e)
+    {
+        return 0;
     }
     return 0;
 }
