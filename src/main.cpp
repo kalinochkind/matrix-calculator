@@ -7,6 +7,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <readline/readline.h>
+#include <readline/history.h>
 
 using namespace std;
 
@@ -305,7 +306,7 @@ void printDecimalResult(const Rational &a)
 {
     if(a.denominator() == 1)
         return;
-    cout << "\nDecimal:\n" << a.asDecimal(30) << endl;
+    cout << "decimal: " << a.asDecimal(30) << endl;
 }
 
 template<class Field>
@@ -479,6 +480,8 @@ void f_expr(string expr)
     if(expr.empty())
     {
         s = safeGetline(">> ");
+        if(!history_length || s != history_get(history_length)->line)
+            add_history(s.c_str());
     }
     else
     {
@@ -572,8 +575,6 @@ void f_expr(string expr)
     Rational tt;
     do
     {
-        if(expr.empty())
-            cout << endl;
         expr = "";
         st_height.clear();
         try
@@ -648,8 +649,7 @@ void f_expr(string expr)
                 opst.pop_back();
             }
             auto res = st[0].toMatrix();
-            cout << "Result:\n" << res;
-
+            cout << res;
             if(res.width() == 1 && res.height() == 1)
                 printDecimalResult(res[0][0]);
         }
@@ -690,6 +690,7 @@ int main(int argc, char **argv)
         string arg2 = (argc > 2 ? argv[2] : "");
         if(isdigit(arg2) && !isdigit(arg1))
             swap(arg1, arg2);
+        using_history();
         if(isdigit(arg1))
         {
             _FINITE_ORDER = BigInteger(arg1);
