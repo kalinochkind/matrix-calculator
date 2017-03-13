@@ -11,16 +11,16 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
     priority[int('/')] = 1;
     priority[int('%')] = 1;
     priority[int('^')] = 2;
-    priority[int('_')] = 3;
+    priority[int('\\')] = 3;
     priority[int('=')] = -1;
     rightassoc[int('^')] = true;
-    rightassoc[int('_')] = true;
+    rightassoc[int('\\')] = true;
     std::string func, num, poly;
     std::vector<std::pair<token_type, std::string> > ans;
     token_type last = TOKEN_LEFTPAR;
     for(char i : expr + ' ')
     {
-        if('A' <= i && i <= 'Z')
+        if(('A' <= i && i <= 'Z') || i == '_')
         {
             if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
@@ -70,7 +70,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             num = func = "";
             if(last == TOKEN_LEFTPAR || last == TOKEN_OP || last == TOKEN_COMMA)
             {
-                ans.push_back({TOKEN_OP, "_"});  // unary
+                ans.push_back({TOKEN_OP, "\\"});  // unary
             }
             else
             {

@@ -348,7 +348,7 @@ void f_expr(string expr)
                         return *a[0] % *a[1];
                     }}},
                     {"-",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + -*a[1]; }}},
-                    {"_",         {1, [](const vector<NumMatrix *> &a) { return -*a[0]; }}},
+                    {"\\",        {1, [](const vector<NumMatrix *> &a) { return -*a[0]; }}},
                     {"det",       {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().det()); }}},
                     {"rank",      {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().rank()); }}},
                     {"trace",     {1, [](const vector<NumMatrix *> &a) {
@@ -476,6 +476,7 @@ void f_expr(string expr)
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}},
             };
+    last_error = false;
     string s;
     if(expr.empty())
     {
@@ -488,7 +489,7 @@ void f_expr(string expr)
         s = expr;
     }
     auto v = splitExpression(s);
-    map<char, NumMatrix> mmap;
+    static map<char, NumMatrix> mmap;
     set<char> repeated;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
@@ -507,7 +508,11 @@ void f_expr(string expr)
                 break;
             case TOKEN_MATRIX:
                 if(dollar)
+                {
+                    if(i.second[0] == '_')
+                        die("Invalid expression");
                     repeated.insert(i.second[0]);
+                }
             case TOKEN_NUMBER:
                 ++st_size;
                 break;
@@ -579,6 +584,7 @@ void f_expr(string expr)
         st_height.clear();
         try
         {
+            bool matrix_read = false;
             for(pair<token_type, string> &i : v)
             {
                 istringstream is, iis;
@@ -602,7 +608,14 @@ void f_expr(string expr)
                         break;
                     case TOKEN_MATRIX:
                         if(!mmap.count(i.second[0]))
+                        {
+                            if(i.second[0] == '_')
+                            {
+                                die("_ is not defined");
+                            }
+                            matrix_read = true;
                             mmap[i.second[0]] = getMatrix<Field>(string("Matrix ") + i.second + ':');
+                        }
                         st.push_back(mmap[i.second[0]]);
                         break;
                     case TOKEN_OP:
@@ -648,6 +661,9 @@ void f_expr(string expr)
                 processOp(opst.back().second, st, 0, operations);
                 opst.pop_back();
             }
+            mmap['_'] = st[0].toMatrix();
+            if(v.size() == 1 && matrix_read)
+                continue;
             auto res = st[0].toMatrix();
             cout << res;
             if(res.width() == 1 && res.height() == 1)
