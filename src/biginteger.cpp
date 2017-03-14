@@ -97,15 +97,37 @@ void BigInteger::_divide(int a, int &remainder)
         return;
     }
     if(a < 0)
+    {
         negative ^= 1;
+        a = -a;
+    }
     long long carry = 0;
     for(auto i = digits.rbegin(); i != digits.rend(); ++i)
     {
         carry = carry * BLOCK_MOD + *i;
-        *i = carry / abs(a);
-        carry %= abs(a);
+        *i = carry / a;
+        carry %= a;
     }
     remainder = static_cast<int>(carry);
+    normalize();
+}
+
+void BigInteger::_divide_by_2()
+{
+    bool carry = false;
+    for(auto i = digits.rbegin(); i != digits.rend(); ++i)
+    {
+        if(carry)
+        {
+            carry = *i % 2;
+            *i = *i / 2 + BLOCK_MOD / 2;
+        }
+        else
+        {
+            carry = *i % 2;
+            *i /= 2;
+        }
+    }
     normalize();
 }
 
@@ -286,6 +308,7 @@ BigInteger &BigInteger::operator/=(const BigInteger &a)
     if(a.digits.size() <= 1)
     {
         int temp;
+        negative ^= a.negative;
         _divide(a.digits[0], temp);
         return *this;
     }
@@ -370,16 +393,16 @@ const BigInteger gcd(BigInteger a, BigInteger b)
         if(!a.odd() && !b.odd())
         {
             d *= 2;
-            a /= 2;
-            b /= 2;
+            a._divide_by_2();
+            b._divide_by_2();
         }
         else if(!a.odd())
         {
-            a /= 2;
+            a._divide_by_2();
         }
         else if(!b.odd())
         {
-            b /= 2;
+            b._divide_by_2();
         }
         else if(a >= b)
         {

@@ -132,6 +132,8 @@ public:
         digits.swap(a.digits);
         std::swap(negative, a.negative);
     }
+
+    void _divide_by_2();
 };
 
 
