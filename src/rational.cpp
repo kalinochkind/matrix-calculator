@@ -100,8 +100,9 @@ const std::string Rational::asDecimal(size_t precision) const
     }
     if(precision)
         result.insert(result.end() - precision, '.');
-    while(precision && result.back() == '0')
-        result.pop_back();
+    if(result.size() > 1 && result != "0." + std::string(result.size() - 2, '0'))
+        while(precision && result.back() == '0')
+            result.pop_back();
     if(_numerator < 0)
         result = "-" + result;
     return result;
