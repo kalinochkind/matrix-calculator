@@ -315,7 +315,7 @@ Polynom<Field> gcd2(const Polynom<Field> &a, const Polynom<Field> &b)
     if(a.degree() < 1 && b.degree() < 1)
     {
         BigInteger i1(a.toMatrix()[0][0]);
-        BigInteger i2(a.toMatrix()[0][0]);
+        BigInteger i2(b.toMatrix()[0][0]);
         return Polynom<Field>(Field(gcd(i1, i2)));
     }
     return a.gcd(b);
@@ -433,6 +433,8 @@ void f_expr(string expr)
                         return NumMatrix(m.fundamental());
                     }}},
                     {"gcd",       {-1, [](const vector<NumMatrix *> &a) {
+                        if(a.size() < 2)
+                            die("gcd requires at least 2 arguments");
                         Polynom<Field> p(a[0]->toMatrix());
                         for(size_t i=1;i<a.size();++i)
                             p = gcd2(p, Polynom<Field>(a[i]->toMatrix()));
