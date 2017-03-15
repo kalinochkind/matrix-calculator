@@ -238,7 +238,12 @@ struct _NumMatrix
             return im + m.im;
         if(type == NumMatrixType::polynom && m.type == NumMatrixType::polynom)
             return pm + m.pm;
-        return toMatrix() + m.toMatrix();
+        Matrix<Field> m1 = toMatrix(), m2 = m.toMatrix();
+        if(m1.width() == 1 && m1.height() == 1 && m2.width() == m2.height())
+            return m2 + Matrix<Field>::identity(m2.width()) * m1[0][0];
+        if(m2.width() == 1 && m2.height() == 1 && m1.width() == m1.height())
+            return m1 + Matrix<Field>::identity(m1.width()) * m2[0][0];
+        return m1 + m2;
     }
 
     const _NumMatrix operator-() const
