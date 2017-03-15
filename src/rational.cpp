@@ -72,7 +72,8 @@ Rational &Rational::operator*=(const Rational &a)
 {
     _numerator *= a._numerator;
     _denominator *= a._denominator;
-    normalize();
+    if(_denominator != 1)
+        normalize();
     return *this;
 }
 
