@@ -48,6 +48,8 @@ public:
 
     Matrix(const Matrix &a);
 
+    static const Matrix fromRow(const std::string &s);
+
     Matrix &operator=(const Matrix &a);
 
     ~Matrix()

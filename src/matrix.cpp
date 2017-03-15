@@ -1,5 +1,6 @@
 #include "matrix.h"
 #include "finite.h"
+#include <sstream>
 
 const unsigned strassen_threshold = 32;
 
@@ -151,6 +152,23 @@ Matrix<Field>::Matrix(const Matrix &a): Matrix(a.M, a.N)
     {
         arr[i] = a.arr[i];
     }
+}
+
+template<class Field>
+const Matrix<Field> Matrix<Field>::fromRow(const std::string &s)
+{
+    std::istringstream iss;
+    iss.str(s);
+    Field f;
+    std::vector<Field> v;
+    while(iss >> f)
+        v.push_back(f);
+    if(v.empty())
+        return Matrix(1, 1);
+    Matrix m(1, v.size());
+    for(unsigned i = 0; i < v.size(); ++i)
+        m[0][i] = v[i];
+    return m;
 }
 
 template<class Field>

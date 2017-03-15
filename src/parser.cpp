@@ -130,7 +130,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                     ans.clear();
                     return ans;
                 }
-                ans.push_back({TOKEN_POLY, poly.substr(1)});
+                ans.push_back({TOKEN_POLY, poly});
                 poly = "";
                 last = TOKEN_POLY;
             }

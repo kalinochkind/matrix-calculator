@@ -77,17 +77,8 @@ public:
         m[0][0] = f;
     }
 
-    explicit Polynom(const std::string &s): m(1, 1)
+    explicit Polynom(const std::string &s): m(Matrix<Field>::fromRow(s))
     {
-        std::istringstream iss;
-        iss.str(s);
-        Field f;
-        std::vector<Field> v;
-        while(iss >> f)
-            v.push_back(f);
-        m = Matrix<Field>(1, v.size());
-        for(unsigned i = 0; i < v.size(); ++i)
-            m[0][i] = v[i];
         strip();
     }
 

@@ -600,7 +600,10 @@ void f_expr(string expr)
             switch(i.first)
             {
                 case TOKEN_POLY:
-                    st.push_back(NumMatrix(Polynom<Field>(i.second)));
+                    if(i.second[0] == '\'')
+                        st.push_back(NumMatrix(Polynom<Field>(i.second.substr(1))));
+                    else
+                        st.push_back(NumMatrix(Matrix<Field>::fromRow(i.second.substr(1))));
                     break;
                 case TOKEN_NUMBER:
                     is.str(i.second);
