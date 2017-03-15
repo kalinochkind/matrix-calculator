@@ -384,8 +384,14 @@ void f_expr(string expr)
                     {"height",    {1, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().height());
                     }}},
-                    {"solve",     {1, [](const vector<NumMatrix *> &a) {
-                        return NumMatrix(a[0]->toMatrix().partial());
+                    {"solve",     {-1, [](const vector<NumMatrix *> &a) {
+                        if(a.size() == 1)
+                            return NumMatrix(a[0]->toMatrix().partial());
+                        else if(a.size() == 2)
+                            return NumMatrix(a[0]->toMatrix().joinHorizontal(a[1]->toMatrix()).partial());
+                        else
+                            die("solve requires 1 or 2 arguments");
+                        return NumMatrix();
                     }}},
                     {"at",        {3, [](const vector<NumMatrix *> &a) {
                         if(a[1]->type != NumMatrixType::number || a[2]->type != NumMatrixType::number)
