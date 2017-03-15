@@ -4,7 +4,7 @@
 #include <iostream>
 #include "biginteger.h"
 
-BigInteger _FINITE_ORDER = 2;
+extern BigInteger _FINITE_ORDER;
 
 class Finite
 {

@@ -1,96 +1,15 @@
 #ifndef _MATIX_H
 #define _MATIX_H
 
-#include "rational.h"
 #include <iostream>
 #include <cassert>
-
-const unsigned strassen_threshold = 32;
+#include "rational.h"
 
 class matrix_error: public std::runtime_error
 {
     using std::runtime_error::runtime_error;
 };
 
-template<class Field>
-void _strassen(unsigned N, Field *a, Field *b, Field *res)
-{
-    if(N <= strassen_threshold)
-    {
-        for(unsigned i = 0; i < N; ++i)
-        {
-            for(unsigned j = 0; j < N; ++j)
-            {
-                for(unsigned q = 0; q < N; ++q)
-                {
-                    res[i * N + j] += a[i * N + q] * b[q * N + j];
-                }
-            }
-        }
-        return;
-    }
-    Field *buf = new Field[N * N / 2];
-    Field *p = new Field[N * N / 4 * 7];
-#define AQUAD(x, y) a[(x?N*N/2:0)+(y?N/2:0)+i*N+j]
-#define BQUAD(x, y) b[(x?N*N/2:0)+(y?N/2:0)+i*N+j]
-#define P(n) p[N*N/4*n+i*N/2+j]
-#define FORFOR for (unsigned i = 0; i < N / 2; ++i) for (unsigned j = 0; j < N / 2; ++j)
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(0, 0) + AQUAD(1, 1);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(0, 0) + BQUAD(1, 1);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(1, 0) + AQUAD(1, 1);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(0, 0);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + N * N / 4);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(0, 0);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(0, 1) - BQUAD(1, 1);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + 2 * N * N / 4);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(1, 1);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(1, 0) - BQUAD(0, 0);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + 3 * N * N / 4);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(0, 0) + AQUAD(0, 1);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(1, 1);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + 4 * N * N / 4);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(1, 0) - AQUAD(0, 0);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(0, 0) + BQUAD(0, 1);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + 5 * N * N / 4);
-    FORFOR
-        {
-            buf[i * N / 2 + j] = AQUAD(0, 1) - AQUAD(1, 1);
-            buf[N * N / 4 + i * N / 2 + j] = BQUAD(1, 0) + BQUAD(1, 1);
-        }
-    _strassen(N / 2, buf, buf + N * N / 4, p + 6 * N * N / 4);
-    FORFOR
-        {
-            res[N * i + j] = P(0) + P(3) - P(4) + P(6);
-            res[N * i + N / 2 + j] = P(2) + P(4);
-            res[N * N / 2 + N * i + j] = P(1) + P(3);
-            res[N * N / 2 + N * i + N / 2 + j] = P(0) - P(1) + P(2) + P(5);
-        }
-    delete[] buf;
-    delete[] p;
-#undef AQUAD
-#undef BQUAD
-#undef P
-#undef FORFOR
-}
 
 template<class Field>
 class Matrix
@@ -104,7 +23,7 @@ class Matrix
     public:
         MatrixRow(Field *row): arr(row) {};
 
-        Ref operator[](unsigned c)
+        inline Ref operator[](unsigned c)
         {
             return arr[c];
         }
@@ -114,48 +33,11 @@ class Matrix
     typedef MatrixRow<Field &> row_t;
     typedef MatrixRow<const Field &> crow_t;
 
-    Matrix _multiplyCube(const Matrix &a) const
-    {
-        assert(N == a.M);
-        Matrix res(M, a.N);
-        for(unsigned i = 0; i < M; ++i)
-        {
-            for(unsigned j = 0; j < a.N; ++j)
-            {
-                for(unsigned q = 0; q < N; ++q)
-                {
-                    res[i][j] += (*this)[i][q] * a[q][j];
-                }
-            }
-        }
-        return res;
-    }
+    static void _strassen(unsigned N, Field *a, Field *b, Field *res);
 
-    const Matrix _multiplyStrassen(const Matrix &m) const
-    {
-        assert(N == m.M);
-        Matrix res(M, m.N);
-        unsigned mx = std::max(M, std::max(N, m.N));
-        while(mx & (mx - 1))
-            ++mx;
-        Field *a = new Field[mx * mx];
-        Field *b = new Field[mx * mx];
-        Field *r = new Field[mx * mx];
-        for(unsigned i = 0; i < M; ++i)
-            for(unsigned j = 0; j < N; ++j)
-                a[i * mx + j] = (*this)[i][j];
-        for(unsigned i = 0; i < N; ++i)
-            for(unsigned j = 0; j < m.N; ++j)
-                b[i * mx + j] = m[i][j];
-        _strassen(mx, a, b, r);
-        for(unsigned i = 0; i < M; ++i)
-            for(unsigned j = 0; j < m.N; ++j)
-                res[i][j] = r[i * mx + j];
-        delete[] a;
-        delete[] b;
-        delete[] r;
-        return res;
-    }
+    Matrix _multiplyCube(const Matrix &a) const;
+
+    const Matrix _multiplyStrassen(const Matrix &m) const;
 
 public:
     Matrix(): M(0), N(0), arr(nullptr) {};
@@ -164,510 +46,129 @@ public:
 
     Matrix(unsigned size): Matrix(size, size) {};
 
-    Matrix(const Matrix &a): Matrix(a.M, a.N)
-    {
-        for(unsigned i = 0; i < M * N; ++i)
-        {
-            arr[i] = a.arr[i];
-        }
-    }
+    Matrix(const Matrix &a);
 
-    Matrix &operator=(const Matrix &a)
-    {
-        if(arr == a.arr)
-            return *this;
-        M = a.M;
-        N = a.N;
-        delete[] arr;
-        arr = new Field[M * N];
-        for(unsigned i = 0; i < M * N; ++i)
-        {
-            arr[i] = a.arr[i];
-        }
-        return *this;
-    }
+    Matrix &operator=(const Matrix &a);
 
     ~Matrix()
     {
         delete[] arr;
     }
 
-    unsigned gauss(Matrix *ext = nullptr)
-    {
-        if(ext)
-        {
-            assert(M == ext->M);
-        }
-        unsigned row = 0;
-        for(unsigned col = 0; col < N; ++col)
-        {
-            for(unsigned i = row; i < M; ++i)
-            {
-                if((*this)[i][col])
-                {
-                    if(i != row)
-                    {
-                        for(unsigned j = 0; j < N; ++j)
-                        {
-                            std::swap((*this)[i][j], (*this)[row][j]);
-                            (*this)[i][j] = -(*this)[i][j];
-                        }
-                        if(ext)
-                        {
-                            for(unsigned j = 0; j < ext->N; ++j)
-                            {
-                                std::swap((*ext)[i][j], (*ext)[row][j]);
-                                (*ext)[i][j] = -(*ext)[i][j];
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-            if(!(*this)[row][col])
-            {
-                continue;
-            }
-            for(unsigned i = row + 1; i < M; ++i)
-            {
-                Field coeff = (*this)[i][col] / (*this)[row][col];
-                for(unsigned j = 0; j < N; ++j)
-                {
-                    (*this)[i][j] -= (*this)[row][j] * coeff;
-                }
-                if(ext)
-                {
-                    for(unsigned j = 0; j < ext->N; ++j)
-                        (*ext)[i][j] -= (*ext)[row][j] * coeff;
-                }
-            }
-            if(++row == M)
-                return row;
-        }
-        return row;
-    }
+    unsigned gauss(Matrix *ext = nullptr);
 
-    static const Matrix identity(unsigned n)
-    {
-        Matrix res(n);
-        for(unsigned i = 0; i < n; ++i)
-        {
-            res[i][i] = 1;
-        }
-        return res;
-    }
+    static const Matrix identity(unsigned n);
 
-    static const Matrix fromNumber(Field f)
+    inline static const Matrix fromNumber(Field f)
     {
         Matrix a(1, 1);
         a[0][0] = f;
         return a;
     }
 
-    row_t operator[](unsigned r)
+    inline row_t operator[](unsigned r)
     {
         return row_t(this->arr + r * N);
     }
 
-    crow_t operator[](unsigned r) const
+    inline crow_t operator[](unsigned r) const
     {
         return crow_t(this->arr + r * N);
     }
 
-    Matrix &operator+=(const Matrix &a)
-    {
-        if(M != a.M || N != a.N)
-            throw matrix_error("Trying to add matrices of different size");
-        for(unsigned i = 0; i < N * M; ++i)
-        {
-            arr[i] += a.arr[i];
-        }
-        return *this;
-    }
+    Matrix &operator+=(const Matrix &a);
 
-    const Matrix operator+(const Matrix &a) const
+    inline const Matrix operator+(const Matrix &a) const
     {
         Matrix temp(*this);
         return temp += a;
     }
 
-    const Matrix operator-() const
-    {
-        Matrix temp(*this);
-        for(unsigned i = 0; i < N * M; ++i)
-        {
-            temp.arr[i] = -temp.arr[i];
-        }
-        return temp;
-    }
+    const Matrix operator-() const;
 
-    const Matrix operator+() const
+    inline const Matrix operator+() const
     {
         return *this;
     }
 
-    Matrix &operator-=(const Matrix &a)
-    {
-        if(M != a.M || N != a.N)
-            throw matrix_error("Trying to subtract matrices of different size");
-        for(unsigned i = 0; i < N * M; ++i)
-        {
-            arr[i] -= a.arr[i];
-        }
-        return *this;
-    }
+    Matrix &operator-=(const Matrix &a);
 
-    const Matrix operator-(const Matrix &a) const
+    inline const Matrix operator-(const Matrix &a) const
     {
         Matrix temp(*this);
         return temp -= a;
     }
 
-    Matrix &operator*=(Field a)
-    {
-        for(unsigned i = 0; i < N * M; ++i)
-        {
-            arr[i] *= a;
-        }
-        return *this;
-    }
+    Matrix &operator*=(Field a);
 
-    const Matrix operator*(Field a) const
+    inline const Matrix operator*(Field a) const
     {
         Matrix temp(*this);
         return temp *= a;
     }
 
-    Matrix &operator/=(Field a)
+    inline Matrix &operator/=(Field a)
     {
         return operator*=(Field(1) / a);
     }
 
-    const Matrix operator/(Field a) const
+    inline const Matrix operator/(Field a) const
     {
         Matrix temp(*this);
         return temp /= a;
     }
 
-    Matrix &operator*=(const Matrix &a)
+    inline Matrix &operator*=(const Matrix &a)
     {
         return *this = *this * a;
     }
 
-    const Matrix operator*(const Matrix &a) const
-    {
-        if(N != a.M)
-            throw matrix_error("Trying to multiply matrices of different size");
-        if(std::max(M, a.N) < strassen_threshold)
-        {
-            return _multiplyCube(a);
-        }
-        else
-        {
-            return _multiplyStrassen(a);
-        }
-    }
+    const Matrix operator*(const Matrix &a) const;
 
-    const Field det() const
-    {
-        if(N != M)
-            throw matrix_error("Trying to calculate determinant of a non-square matrix");
-        Matrix tmp(*this);
-        if(tmp.gauss() != N)
-            return Field();
-        Field ans = tmp[0][0];
-        for(unsigned j = 1; j < N; ++j)
-        {
-            ans *= tmp[j][j];
-        }
-        return ans;
-    }
+    const Field det() const;
 
-    const Matrix transposed() const
-    {
-        Matrix res(N, M);
-        for(unsigned i = 0; i < M; ++i)
-            for(unsigned j = 0; j < N; ++j)
-            {
-                res[j][i] = (*this)[i][j];
-            }
-        return res;
-    };
+    const Matrix transposed() const;
 
-    const Field trace() const
-    {
-        if(N != M)
-            throw matrix_error("Trying to calculate trace of a non-square matrix");
-        Field ans;
-        for(unsigned i = 0; i < N * N; i += N + 1)
-        {
-            ans += arr[i];
-        }
-        return ans;
-    }
+    const Field trace() const;
 
-    const Matrix inverted() const
+    const Matrix inverted() const;
+
+    inline unsigned rank() const
     {
         Matrix tmp(*this);
-        Matrix ext = Matrix::identity(N);
-        tmp.inverseExt(ext);
-        return ext;
+        return tmp.gauss();
     }
 
-    void inverse()
-    {
-        *this = inverted();
-    }
+    bool operator==(const Matrix &a) const;
 
-    unsigned rank() const
-    {
-        Matrix tmp(*this);
-        unsigned a = tmp.gauss();
-        return a;
-    }
-
-    bool operator==(const Matrix &a) const
-    {
-        if(M != a.M || N != a.N)
-            return false;
-        for(unsigned i = 0; i < N * M; ++i)
-        {
-            if(arr[i] != a.arr[i])
-                return false;
-        }
-        return true;
-    }
-
-    bool operator!=(const Matrix &a) const
+    inline bool operator!=(const Matrix &a) const
     {
         return !(*this == a);
     }
 
-    unsigned height() const
+    inline unsigned height() const
     {
         return M;
     }
 
-    unsigned width() const
+    inline unsigned width() const
     {
         return N;
     }
 
-    const Matrix submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2) const
-    {
-        if(x1 > x2)
-            std::swap(x1, x2);
-        if(y1 > y2)
-            std::swap(y1, y2);
-        Matrix res(x2 - x1 + 1, y2 - y1 + 1);
-        for(unsigned i = x1; i <= x2; ++i)
-        {
-            for(unsigned j = y1; j <= y2; ++j)
-            {
-                res[i - x1][j - y1] = (*this)[i][j];
-            }
-        }
-        return res;
-    }
+    const Matrix submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2) const;
 
-    void inverseExt(Matrix &ext)
-    {
-        if(N != M)
-            throw matrix_error("Trying to inverse a non-square matrix");
-        if(M != ext.M)
-        {
-            throw matrix_error("Invalid use of inverseExt");
-        }
-        if(gauss(&ext) != N)
-        {
-            throw matrix_error("Cannot inverse a singular matrix");
-        }
-        for(unsigned i = N - 1; i != unsigned(-1); --i)
-        {
-            Field coeff = Field(1) / (*this)[i][i];
-            for(unsigned j = 0; j < N; ++j)
-            {
-                (*this)[i][j] *= coeff;
-            }
-            for(unsigned j = 0; j < ext.N; ++j)
-            {
-                ext[i][j] *= coeff;
-            }
-            for(unsigned j = i + 1; j < N; j++)
-            {
-                if(!(*this)[i][j])
-                    continue;
-                for(unsigned q = 0; q < ext.N; q++)
-                {
-                    ext[i][q] -= ext[j][q] * (*this)[i][j];
-                }
-                (*this)[i][j] = Field();
-            }
-        }
-    }
+    void inverseExt(Matrix &ext);
 
-    const Matrix fundamental() const
-    {
-        Matrix m(*this);
-        unsigned rk = m.gauss();
-        std::vector<char> dependent(N);
-        std::vector<int> dep_height(N);
-        int last_nonzero = -1;
-        for(unsigned i=0;i<N;++i)
-        {
-            for(int j=M-1;j>last_nonzero;--j)
-            {
-                if(m[j][i])
-                {
-                    last_nonzero = j;
-                    dependent[i] = 1;
-                    dep_height[i] = j;
-                    break;
-                }
-            }
-        }
-        for(unsigned i=0;i<N;++i)
-        {
-            if(!dependent[i])
-                continue;
-            Field inv = Field(1) / m[dep_height[i]][i];
-            for(unsigned j=i;j<N;++j)
-            {
-                m[dep_height[i]][j] *= inv;
-            }
-            for(int j=0;j<dep_height[i];++j)
-            {
-                if(!m[j][i])
-                    continue;
-                for(unsigned q=i+1;q<N;++q)
-                {
-                    m[j][q] -= m[j][i] * m[dep_height[i]][q];
-                }
-                m[j][i] = 0;
-            }
-        }
-        Matrix ans(N, N - rk);
-        int cur = 0;
-        unsigned col = -1;
-        for(unsigned i=0;i<N;++i)
-        {
-            if(dependent[i])
-                continue;
-            do
-            {
-                ++col;
-            }
-            while(dependent[col]);
-            for(unsigned j=0;j<N;++j)
-            {
-                if(dependent[j])
-                {
-                    ans[j][cur] = -m[dep_height[j]][i];
-                }
-                else if(j == col)
-                {
-                    ans[j][cur] = 1;
-                }
-            }
-            ++cur;
-        }
-        return ans;
-    }
+    const Matrix fundamental() const;
 
-    const Matrix partial() const
-    {
-        if(N < 2)
-            throw matrix_error("Invalid matrix");
-        Matrix sys = submatrix(0, 0, M - 1, N - 2);
-        Matrix right = submatrix(0, N - 1, M - 1, N - 1);
-        Matrix ans(1, N - 1);
-        if(sys.gauss(&right) != rank())
-        {
-            throw matrix_error("No solutions");
-        }
-        int row = M - 1;
-        for(int col=N-2;col>=0;--col)
-        {
-            while(row >= 0 && !sys[row][col])
-                --row;
-            if(row < 0)
-                return ans;
-            Field cval = right[row][0] / sys[row][col];
-            if(!cval)
-                continue;
-            ans[0][col] = cval;
-            for(int i=0;i<=row;++i)
-            {
-                right[i][0] -= cval * sys[i][col];
-            }
-        }
-        return ans;
+    const Matrix partial() const;
 
-    }
+    const Matrix power(const BigInteger &pow) const;
 
-    const Matrix power(const BigInteger &pow) const
-    {
-        if(M != N)
-            throw matrix_error("Power is only defined for square matrices");
-        Matrix t = identity(width());
-        Matrix a(*this);
-        BigInteger p = abs(pow);
-        while(p)
-        {
-            if(p.odd())
-                t *= a;
-            p /= 2;
-            a *= a;
-        }
-        if(pow < 0)
-            t.inverse();
-        return t;
-    }
+    const Matrix joinHorizontal(const Matrix &a) const;
 
-    const Matrix joinHorizontal(const Matrix &a) const
-    {
-        if(M != a.M)
-        {
-            throw matrix_error("Trying to join matrices of different height");
-        }
-        Matrix res(M, N + a.N);
-        for(unsigned i = 0; i < M; i++)
-        {
-            for(unsigned j = 0; j < N; j++)
-            {
-                res[i][j] = (*this)[i][j];
-            }
-            for(unsigned j = 0; j < a.N; j++)
-            {
-                res[i][N + j] = a[i][j];
-            }
-        }
-        return res;
-    }
-
-    const Matrix joinVertical(const Matrix &a) const
-    {
-        if(N != a.N)
-        {
-            throw matrix_error("Trying to join matrices of different width");
-        }
-        Matrix res(M + a.M, N);
-        for(unsigned i = 0; i < M; i++)
-        {
-            for(unsigned j = 0; j < N; j++)
-            {
-                res[i][j] = (*this)[i][j];
-            }
-        }
-        for(unsigned i = 0; i < a.M; i++)
-        {
-            for(unsigned j = 0; j < N; j++)
-            {
-                res[M + i][j] = a[i][j];
-            }
-        }
-        return res;
-    }
+    const Matrix joinVertical(const Matrix &a) const;
 
     void swap(Matrix &a)
     {
@@ -675,51 +176,23 @@ public:
         std::swap(M, a.M);
         std::swap(N, a.N);
     }
+
+    void _write_to_ostream(std::ostream &out) const;
+
+    void _read_from_istream(std::istream &in);
 };
 
 template<class Field>
-std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
+inline std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
-    if(!a.width() || !a.height())
-        return out;
-    std::vector<std::vector<std::string>> strs(a.height());
-    std::vector<size_t> max_width(a.width());
-    for(unsigned i = 0; i < a.height(); ++i)
-    {
-        for(unsigned j = 0; j < a.width(); ++j)
-        {
-            std::string s = toString(a[i][j]);
-            strs[i].push_back(s);
-            max_width[j] = std::max(max_width[j], s.length());
-        }
-    }
-    for(unsigned i = 0; i < a.height(); ++i)
-    {
-        for(unsigned j = 0; j < a.width(); ++j)
-        {
-            if(j)
-                std::cout << ' ';
-            for(unsigned t=0;t+strs[i][j].length()<max_width[j];++t)
-            {
-                std::cout << ' ';
-            }
-            std::cout << strs[i][j];
-        }
-        std::cout << '\n';
-    }
+    a._write_to_ostream(out);
     return out;
 };
 
 template<class Field>
-std::istream &operator>>(std::istream &in, Matrix<Field> &a)
+inline std::istream &operator>>(std::istream &in, Matrix<Field> &a)
 {
-    for(unsigned i = 0; i < a.height(); ++i)
-    {
-        for(unsigned j = 0; j < a.width(); ++j)
-        {
-            in >> a[i][j];
-        }
-    }
+    a._read_from_istream(in);
     return in;
 };
 

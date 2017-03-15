@@ -11,6 +11,8 @@
 
 using namespace std;
 
+BigInteger _FINITE_ORDER = 2;
+
 class end_of_input: public exception
 {
     using exception::exception;
