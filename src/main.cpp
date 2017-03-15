@@ -64,12 +64,10 @@ string safeGetline(const string &prompt = "")
     return s;
 }
 
-bool last_error = false;
 
 template<class Field>
 Matrix<Field> getMatrix(string prompt)
 {
-    last_error = false;
     string s, sum;
     cout << prompt << endl;
     s = safeGetline();
@@ -480,7 +478,6 @@ void f_expr(string expr)
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}},
             };
-    last_error = false;
     string s;
     if(expr.empty())
     {
@@ -494,7 +491,6 @@ void f_expr(string expr)
     }
     auto v = splitExpression(s);
     static map<char, NumMatrix> mmap;
-    set<char> repeated;
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
     vector<ssize_t> st_height;
@@ -515,7 +511,7 @@ void f_expr(string expr)
                 {
                     if(i.second[0] == '_')
                         die("Invalid expression");
-                    repeated.insert(i.second[0]);
+                    mmap.erase(i.second[0]);
                 }
             case TOKEN_NUMBER:
                 ++st_size;
@@ -582,123 +578,104 @@ void f_expr(string expr)
     if(st_size != 1)
         die("Invalid expression");
     Rational tt;
-    do
+    expr = "";
+    st_height.clear();
+    try
     {
-        expr = "";
-        st_height.clear();
-        try
+        bool matrix_read = false;
+        for(pair<token_type, string> &i : v)
         {
-            bool matrix_read = false;
-            for(pair<token_type, string> &i : v)
+            istringstream is, iis;
+            switch(i.first)
             {
-                istringstream is, iis;
-                switch(i.first)
-                {
-                    case TOKEN_POLY:
-                        st.push_back(NumMatrix(Polynom<Field>(i.second)));
-                        break;
-                    case TOKEN_NUMBER:
-                        is.str(i.second);
-                        is >> tt;
-                        if(tt == BigInteger(tt))
-                            st.push_back(NumMatrix(int(tt)));
-                        else
+                case TOKEN_POLY:
+                    st.push_back(NumMatrix(Polynom<Field>(i.second)));
+                    break;
+                case TOKEN_NUMBER:
+                    is.str(i.second);
+                    is >> tt;
+                    if(tt == BigInteger(tt))
+                        st.push_back(NumMatrix(int(tt)));
+                    else
+                    {
+                        Field tf;
+                        iis.str(i.second);
+                        iis >> tf;
+                        st.push_back(NumMatrix(tf));
+                    }
+                    break;
+                case TOKEN_MATRIX:
+                    if(!mmap.count(i.second[0]))
+                    {
+                        if(i.second[0] == '_')
                         {
-                            Field tf;
-                            iis.str(i.second);
-                            iis >> tf;
-                            st.push_back(NumMatrix(tf));
+                            die("_ is not defined");
                         }
-                        break;
-                    case TOKEN_MATRIX:
-                        if(!mmap.count(i.second[0]))
-                        {
-                            if(i.second[0] == '_')
-                            {
-                                die("_ is not defined");
-                            }
-                            matrix_read = true;
-                            mmap[i.second[0]] = getMatrix<Field>(string("Matrix ") + i.second + ':');
-                        }
-                        st.push_back(mmap[i.second[0]]);
-                        break;
-                    case TOKEN_OP:
-                        while(opst.size() && opst.back().first == TOKEN_OP &&
-                              priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
-                              priority[int(opst.back().second[0])])
-                        {
-                            processOp(opst.back().second, st, 0, operations);
-                            opst.pop_back();
-                        }
-                    case TOKEN_FUNC:
-                        if(i.first == TOKEN_FUNC)
-                            st_height.push_back(st.size());
-                    case TOKEN_LEFTPAR:
-                        opst.push_back(i);
-                        break;
-                    case TOKEN_RIGHTPAR:
-                        while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
-                        {
-                            processOp(opst.back().second, st, 0, operations);
-                            opst.pop_back();
-                        }
+                        matrix_read = true;
+                        mmap[i.second[0]] = getMatrix<Field>(string("Matrix ") + i.second + ':');
+                    }
+                    st.push_back(mmap[i.second[0]]);
+                    break;
+                case TOKEN_OP:
+                    while(opst.size() && opst.back().first == TOKEN_OP &&
+                          priority[int(i.second[0])] + rightassoc[int(i.second[0])] <=
+                          priority[int(opst.back().second[0])])
+                    {
+                        processOp(opst.back().second, st, 0, operations);
                         opst.pop_back();
-                        if(opst.size() && opst.back().first == TOKEN_FUNC)
-                        {
-                            processOp(opst.back().second, st, st.size() - st_height.back(), operations);
-                            st_height.pop_back();
-                            opst.pop_back();
-                        }
-                        break;
-                    case TOKEN_COMMA:
-                        while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
-                        {
-                            processOp(opst.back().second, st, 0, operations);
-                            opst.pop_back();
-                        }
-                        break;
-                    case TOKEN_DOLLAR:;
-                }
+                    }
+                case TOKEN_FUNC:
+                    if(i.first == TOKEN_FUNC)
+                        st_height.push_back(st.size());
+                case TOKEN_LEFTPAR:
+                    opst.push_back(i);
+                    break;
+                case TOKEN_RIGHTPAR:
+                    while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                    {
+                        processOp(opst.back().second, st, 0, operations);
+                        opst.pop_back();
+                    }
+                    opst.pop_back();
+                    if(opst.size() && opst.back().first == TOKEN_FUNC)
+                    {
+                        processOp(opst.back().second, st, st.size() - st_height.back(), operations);
+                        st_height.pop_back();
+                        opst.pop_back();
+                    }
+                    break;
+                case TOKEN_COMMA:
+                    while(opst.size() && opst.back().first != TOKEN_LEFTPAR)
+                    {
+                        processOp(opst.back().second, st, 0, operations);
+                        opst.pop_back();
+                    }
+                    break;
+                case TOKEN_DOLLAR:;
             }
-            while(opst.size())
-            {
-                processOp(opst.back().second, st, 0, operations);
-                opst.pop_back();
-            }
-            mmap['_'] = st[0].toMatrix();
-            if(v.size() == 1 && matrix_read)
-                continue;
-            auto res = st[0].toMatrix();
-            cout << res;
-            if(res.width() == 1 && res.height() == 1)
-                printDecimalResult(res[0][0]);
         }
-        catch(matrix_error &e)
+        while(opst.size())
         {
-            if(last_error)
-                break;
-            last_error = true;
-            cout << "Error: " << e.what() << endl;
+            processOp(opst.back().second, st, 0, operations);
+            opst.pop_back();
         }
-        catch(invalid_number_error &e)
-        {
-            if(last_error)
-                break;
-            last_error = true;
-            cout << e.what() << endl;
-        }
-        catch(end_of_input &e)
-        {
-            break;
-        }
-        st.clear();
-        opst.clear();
-        for(char i : repeated)
-        {
-            mmap.erase(i);
-        }
-    } while(!repeated.empty());
-
+        mmap['_'] = st[0].toMatrix();
+        if((v.size() == 1 || (v.size() == 2 && v[0].first == TOKEN_DOLLAR)) && matrix_read)
+            return;
+        auto res = st[0].toMatrix();
+        cout << res;
+        if(res.width() == 1 && res.height() == 1)
+            printDecimalResult(res[0][0]);
+    }
+    catch(matrix_error &e)
+    {
+        cout << "Error: " << e.what() << endl;
+    }
+    catch(invalid_number_error &e)
+    {
+        cout << e.what() << endl;
+    }
+    catch(end_of_input &e) {}
 }
 
 
