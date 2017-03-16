@@ -367,7 +367,7 @@ void f_expr(string expr)
                         }
                         return NumMatrix(m);
                     }}},
-                    {"transpose", {1, [](const vector<NumMatrix *> &a) {
+                    {"t", {1, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
                     {"id",        {1, [](const vector<NumMatrix *> &a) {
@@ -393,13 +393,21 @@ void f_expr(string expr)
                             die("solve requires 1 or 2 arguments");
                         return NumMatrix();
                     }}},
-                    {"at",        {3, [](const vector<NumMatrix *> &a) {
-                        if(a[1]->type != NumMatrixType::number || a[2]->type != NumMatrixType::number)
-                            die("Invalid use of at");
-                        if(a[1]->im < 0 || a[1]->im >= int(a[0]->toMatrix().height()) ||
-                           a[2]->im < 0 || a[2]->im >= int(a[0]->toMatrix().width()))
+                    {"col",       {2, [](const vector<NumMatrix *> &a) {
+                        if(a[1]->type != NumMatrixType::number)
+                            die("Invalid use of col");
+                        Matrix<Field> m = a[0]->toMatrix();
+                        if(a[1]->im < 0 || a[1]->im >= int(m.width()))
                             die("at: out of range");
-                        return NumMatrix(a[0]->toMatrix()[int(a[1]->im)][int(a[2]->im)]);
+                        return NumMatrix(m.submatrix(0, int(a[1]->im), m.height()-1, int(a[1]->im)));
+                    }}},
+                    {"row",       {2, [](const vector<NumMatrix *> &a) {
+                        if(a[1]->type != NumMatrixType::number)
+                            die("Invalid use of row");
+                        Matrix<Field> m = a[0]->toMatrix();
+                        if(a[1]->im < 0 || a[1]->im >= int(m.height()))
+                            die("at: out of range");
+                        return NumMatrix(m.submatrix(int(a[1]->im), 0, int(a[1]->im), m.width()-1));
                     }}},
                     {"int",       {1, [](const vector<NumMatrix *> &a) {
                         if(a[0]->type == NumMatrixType::number)
