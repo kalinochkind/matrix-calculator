@@ -388,7 +388,12 @@ void f_expr(string expr)
                         if(a.size() == 1)
                             return NumMatrix(a[0]->toMatrix().partial());
                         else if(a.size() == 2)
-                            return NumMatrix(a[0]->toMatrix().joinHorizontal(a[1]->toMatrix()).partial());
+                        {
+                            Matrix<Field> r = a[1]->toMatrix();
+                            if(r.width() > 1 && r.height() == 1)
+                                r = r.transposed();
+                            return NumMatrix(a[0]->toMatrix().joinHorizontal(r).partial());
+                        }
                         else
                             die("solve requires 1 or 2 arguments");
                         return NumMatrix();
