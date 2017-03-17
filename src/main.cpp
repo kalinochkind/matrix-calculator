@@ -515,6 +515,17 @@ void f_expr(string expr)
     }
     auto v = splitExpression(s);
     static map<char, NumMatrix> mmap;
+    char save_to = 0;
+    if(v.size() && v[0].first == TOKEN_FUNC && v[0].second == "let")
+    {
+        if(v.size() < 3 || v[1].first != TOKEN_MATRIX)
+        {
+            die("Invalid use of let");
+        }
+        save_to = v[1].second[0];
+        v.erase(v.begin());
+        v.erase(v.begin());
+    }
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
     vector<ssize_t> st_height;
@@ -687,6 +698,11 @@ void f_expr(string expr)
             opst.pop_back();
         }
         mmap['_'] = st[0].toMatrix();
+        if(save_to)
+        {
+            mmap[save_to] = st[0].toMatrix();
+            return;
+        }
         if((v.size() == 1 || (v.size() == 2 && v[0].first == TOKEN_DOLLAR)) && matrix_read)
             return;
         auto res = st[0].toMatrix();

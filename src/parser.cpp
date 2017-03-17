@@ -18,6 +18,7 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
     std::string func, num, poly;
     std::vector<std::pair<token_type, std::string> > ans;
     token_type last = TOKEN_LEFTPAR;
+    bool skip_next_matrix = false;
     for(char i : expr + ' ')
     {
         if(('A' <= i && i <= 'Z') || i == '_')
@@ -30,7 +31,11 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
                 ans.push_back({TOKEN_OP, "*"});
             ans.push_back({TOKEN_MATRIX, std::string() + i});
-            last = TOKEN_MATRIX;
+            if(skip_next_matrix)
+                last = TOKEN_LEFTPAR;
+            else
+                last = TOKEN_MATRIX;
+            skip_next_matrix = false;
         }
         else if(i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=' || i == '/' || i == '%')
         {
@@ -148,7 +153,11 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                 continue;
             }
             if(func.size())
+            {
                 ans.push_back({TOKEN_FUNC, func});
+                if(func == "let")
+                    skip_next_matrix = true;
+            }
             if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
