@@ -172,6 +172,8 @@ public:
 
     const Matrix joinVertical(const Matrix &a) const;
 
+    const Matrix charPolynom() const;
+
     void swap(Matrix &a)
     {
         std::swap(arr, a.arr);

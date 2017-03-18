@@ -583,6 +583,26 @@ const Matrix<Field> Matrix<Field>::joinVertical(const Matrix &a) const
 }
 
 template<class Field>
+const Matrix<Field> Matrix<Field>::charPolynom() const
+{
+    if(N != M)
+    {
+        throw matrix_error("Characteristic polynom is only defined for square matrices");
+    }
+    Matrix A(*this), B(identity(N));
+    Matrix ans(1, N + 1);
+    ans[0][0] = 1;
+    for(unsigned i=1;i<=N;++i)
+    {
+        A = *this * B;
+        Field p = A.trace() / i;
+        B = A - identity(N) * p;
+        ans[0][i] = -p;
+    }
+    return ans;
+}
+
+template<class Field>
 void Matrix<Field>::_write_to_ostream(std::ostream &out) const
 {
     if(!N || !M)

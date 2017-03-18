@@ -501,6 +501,9 @@ void f_expr(string expr)
                         unsigned mx = std::max(div.degree(), mod.degree()) + 1;
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}},
+                    {"char", {1, [](const vector<NumMatrix *> &a) {
+                        return NumMatrix(Polynom<Field>(a[0]->toMatrix().charPolynom()));
+                    }}},
             };
     string s;
     if(expr.empty())
