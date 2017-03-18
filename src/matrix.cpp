@@ -523,14 +523,22 @@ const Matrix<Field> Matrix<Field>::power(const BigInteger &pow) const
     if(M != N)
         throw matrix_error("Power is only defined for square matrices");
     Matrix t = identity(width());
+    bool t_set = false;
     Matrix a(*this);
     BigInteger p = abs(pow);
     while(p)
     {
         if(p.odd())
-            t *= a;
+        {
+            if (t_set)
+                t *= a;
+            else
+                t = a;
+            t_set = true;
+        }
         p._divide_by_2();
-        a *= a;
+        if(p)
+            a *= a;
     }
     return pow < 0 ? t.inverted() : t;
 }
