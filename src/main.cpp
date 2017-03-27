@@ -6,6 +6,7 @@
 #include <set>
 #include <sstream>
 #include <cstdlib>
+#include <algorithm>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -503,6 +504,16 @@ void f_expr(string expr)
                     }}},
                     {"char", {1, [](const vector<NumMatrix *> &a) {
                         return NumMatrix(Polynom<Field>(a[0]->toMatrix().charPolynom()));
+                    }}},
+                    {"roots", {1, [](const vector<NumMatrix *> &a) {
+                        Polynom<Field> p(a[0]->toMatrix());
+                        vector<Field> v = p.roots();
+                        Matrix<Field> m(1, v.size());
+                        std::sort(v.begin(), v.end(), [](const Field &a, const Field &b){
+                            return BigInteger(a) < BigInteger(b);});
+                        for(unsigned i=0;i<v.size();++i)
+                            m[0][i] = v[i];
+                        return NumMatrix(m);
                     }}},
             };
     string s;

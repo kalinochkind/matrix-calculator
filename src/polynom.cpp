@@ -305,5 +305,57 @@ const std::pair<Polynom<Field>, Polynom<Field>> Polynom<Field>::ordinalDiv(const
     return {Polynom(m), rem};
 }
 
+template<class Field>
+const Field Polynom<Field>::valueAt(Field a) const
+{
+    Field res = 0;
+    for(unsigned i=0;i<m.width();++i)
+    {
+        res *= a;
+        res += m[0][i];
+    }
+    return res;
+}
+
+template<class Field>
+const std::vector<Field> Polynom<Field>::roots() const
+{
+    std::vector<Field> ans;
+    Polynom<Field> t(*this);
+    Polynom<Field> x(Field(1));
+    x.multiplyX(1);
+    int deg = t.degree();
+    if(deg == 0)
+        return ans;
+    if(deg < 0)
+        return {0};
+    while(t.m[0][t.m.width() - 1] == 0)
+    {
+        --deg;
+        ans.push_back(0);
+        t /= x;
+    }
+    if(deg <= 0)
+        return ans;
+    for(BigInteger i=1;i<=std::min(abs(BigInteger(t.m[0][t.m.width() - 1])), BigInteger(1000));++i)
+    {
+        while(deg && t.valueAt(i) == 0)
+        {
+            --deg;
+            ans.push_back(i);
+            t /= x - Polynom(Field(i));
+        }
+        while(deg && t.valueAt(-i) == 0)
+        {
+            --deg;
+            ans.push_back(-i);
+            t /= x + Polynom(Field(i));
+        }
+        if(deg <= 0)
+            return ans;
+    }
+    return ans;
+}
+
 template class Polynom<Rational>;
 template class Polynom<Finite>;

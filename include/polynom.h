@@ -130,6 +130,10 @@ public:
 
     const std::pair<Polynom, Polynom> ordinalDiv(const Polynom &a) const;
 
+    const Field valueAt(Field a) const;
+
+    const std::vector<Field> roots() const;
+
 };
 
 #endif
