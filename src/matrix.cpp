@@ -482,6 +482,7 @@ const Matrix<Field> Matrix<Field>::fundamental() const
         }
         ++cur;
     }
+    makeIntColumns(ans);
     return ans;
 }
 
@@ -653,6 +654,31 @@ void Matrix<Field>::_read_from_istream(std::istream &in)
         }
     }
 }
+
+void makeIntColumns(Matrix<Finite> &) {};
+
+void makeIntColumns(Matrix<Rational> &m)
+{
+    for(unsigned col=0;col<m.width();++col)
+    {
+        BigInteger g = 1;
+        unsigned pos = 0, neg = 0;
+        for(unsigned i=0;i<m.height();++i)
+        {
+            if(m[i][col].denominator() != 1)
+                g *= m[i][col].denominator() / gcd(g, m[i][col].denominator());
+            pos += m[i][col] > 0;
+            neg += m[i][col] < 0;
+        }
+        if(neg > pos)
+            g = -g;
+        for(unsigned i=0;i<m.height();++i)
+        {
+            m[i][col] *= g;
+        }
+    }
+};
+
 
 template class Matrix<Rational>;
 template class Matrix<Finite>;

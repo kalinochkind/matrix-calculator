@@ -200,4 +200,7 @@ inline std::istream &operator>>(std::istream &in, Matrix<Field> &a)
     return in;
 };
 
+template<class Field>
+void makeIntColumns(Matrix<Field> &m);
+
 #endif
