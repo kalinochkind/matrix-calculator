@@ -335,13 +335,17 @@ void f_expr(string expr)
             {
                     {"+",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + *a[1]; }}},
                     {"^",         {2, [](const vector<NumMatrix *> &a) {
-                        if(a[0]->type == NumMatrixType::polynom || a[1]->type == NumMatrixType::polynom)
-                            die("^ is not supported for polynoms");
-                        if(a[1]->type == NumMatrixType::number)
-                            return NumMatrix(a[0]->toMatrix().power(a[1]->im));
                         Matrix<Field> m = a[1]->toMatrix();
                         if(m.height() != 1 || m.width() != 1)
                             die("Invalid use of ^: integer required");
+                        if(a[0]->type == NumMatrixType::polynom)
+                        {
+                            if(BigInteger(m[0][0]) < 0)
+                            {
+                                die("Polynom ^ negative is undefined");
+                            }
+                            return NumMatrix(a[0]->pm.power(BigInteger(m[0][0])));
+                        }
                         return NumMatrix(a[0]->toMatrix().power(BigInteger(m[0][0])));
                     }}},
                     {"*",         {2, [](const vector<NumMatrix *> &a) {

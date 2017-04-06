@@ -318,6 +318,30 @@ const Field Polynom<Field>::valueAt(Field a) const
 }
 
 template<class Field>
+const Polynom<Field> Polynom<Field>::power(const BigInteger &pow) const
+{
+    Polynom t = Polynom(Field(1));
+    bool t_set = false;
+    Polynom a(*this);
+    BigInteger p = abs(pow);
+    while(p)
+    {
+        if(p.odd())
+        {
+            if (t_set)
+                t *= a;
+            else
+                t = a;
+            t_set = true;
+        }
+        p._divide_by_2();
+        if(p)
+            a *= a;
+    }
+    return t;
+}
+
+template<class Field>
 const std::vector<Field> Polynom<Field>::roots() const
 {
     std::vector<Field> ans;

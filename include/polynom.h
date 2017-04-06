@@ -134,6 +134,8 @@ public:
 
     const std::vector<Field> roots() const;
 
+    const Polynom power(const BigInteger &pow) const;
+
 };
 
 #endif
