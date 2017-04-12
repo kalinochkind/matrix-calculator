@@ -123,6 +123,8 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
             if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
             num = func = "";
+            if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR)
+                ans.push_back({TOKEN_OP, "*"});
             ans.push_back({TOKEN_DOLLAR, ""});
             last = TOKEN_DOLLAR;
         }
