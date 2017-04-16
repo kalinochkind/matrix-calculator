@@ -544,6 +544,18 @@ void f_expr(string expr)
         v.erase(v.begin());
         v.erase(v.begin());
     }
+    if(v.size() && v[0].first == TOKEN_FUNC && v[0].second == "del")
+    {
+        if(v.size() > 2 || (v.size() == 2 && v[1].first != TOKEN_MATRIX))
+        {
+            die("Invalid use of del");
+        }
+        if(v.size() == 1)
+            mmap.clear();
+        else
+            mmap.erase(v[1].second[0]);
+        return;
+    }
     vector<pair<token_type, string> > opst;
     vector<NumMatrix> st;
     vector<ssize_t> st_height;
