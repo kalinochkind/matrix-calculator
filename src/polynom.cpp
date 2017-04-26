@@ -341,6 +341,16 @@ const Polynom<Field> Polynom<Field>::power(const BigInteger &pow) const
     return t;
 }
 
+Finite _denominator(const Finite &)
+{
+    return 1;
+}
+
+Rational _denominator(const Rational &a)
+{
+    return a.denominator();
+}
+
 template<class Field>
 const std::vector<Field> Polynom<Field>::roots() const
 {
@@ -361,19 +371,20 @@ const std::vector<Field> Polynom<Field>::roots() const
     }
     if(deg <= 0)
         return ans;
-    for(BigInteger i=1;i<=std::min(abs(BigInteger(t.m[0][t.m.width() - 1])), BigInteger(1000));++i)
+    Field root_mul = Field(1) / _denominator(t.m[0][t.m.width() - 1]);
+    for(BigInteger i=1;i<=5000;++i)
     {
-        while(deg && t.valueAt(i) == 0)
+        while(deg && t.valueAt(Field(i) * root_mul) == 0)
         {
             --deg;
-            ans.push_back(i);
-            t /= x - Polynom(Field(i));
+            ans.push_back(Field(i) * root_mul);
+            t /= x - Polynom(Field(i) * root_mul);
         }
-        while(deg && t.valueAt(-i) == 0)
+        while(deg && t.valueAt(-Field(i) * root_mul) == 0)
         {
             --deg;
-            ans.push_back(-i);
-            t /= x + Polynom(Field(i));
+            ans.push_back(-Field(i) * root_mul);
+            t /= x + Polynom(Field(i) * root_mul);
         }
         if(deg <= 0)
             return ans;
