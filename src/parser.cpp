@@ -108,6 +108,11 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
         }
         else if(i == ',')
         {
+            if(poly.size())
+            {
+                poly.push_back(' ');
+                continue;
+            }
             if(func.size())
                 ans.push_back({TOKEN_FUNC, func});
             if(num.size())
