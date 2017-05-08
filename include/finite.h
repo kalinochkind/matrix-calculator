@@ -20,36 +20,36 @@ public:
             val = _FINITE_ORDER - ((0ll - val - 1) % _FINITE_ORDER + 1);
     }
 
-    Finite(int n): Finite(BigInteger(n)) {}
+    Finite(int n) noexcept: Finite(BigInteger(n)) {}
 
-    Finite(): val(0) {};
+    Finite() noexcept: val(0) {};
 
-    explicit operator const BigInteger() const
+    explicit operator const BigInteger() const noexcept
     {
         return val;
     }
 
-    explicit operator int() const
+    explicit operator int() const noexcept
     {
         return int(val);
     }
 
-    explicit operator bool() const
+    explicit operator bool() const noexcept
     {
         return bool(val);
     }
 
-    const Finite operator-() const
+    const Finite operator-() const noexcept
     {
         return Finite() - *this;
     }
 
-    const Finite operator+() const
+    const Finite operator+() const noexcept
     {
         return *this;
     }
 
-    Finite &operator+=(const Finite &a)
+    Finite &operator+=(const Finite &a) noexcept
     {
         BigInteger nval = val + a.val;
         if(nval >= _FINITE_ORDER)
@@ -60,13 +60,13 @@ public:
         return *this;
     }
 
-    const Finite operator+(const Finite &a) const
+    const Finite operator+(const Finite &a) const noexcept
     {
         Finite temp(*this);
         return temp += a;
     }
 
-    Finite &operator-=(const Finite &a)
+    Finite &operator-=(const Finite &a) noexcept
     {
         BigInteger nval = val - a.val;
         if(nval < 0)
@@ -77,7 +77,7 @@ public:
         return *this;
     }
 
-    const Finite operator-(const Finite &a) const
+    const Finite operator-(const Finite &a) const noexcept
     {
         Finite temp(*this);
         return temp -= a;
@@ -131,12 +131,12 @@ public:
 };
 
 
-inline bool operator==(const Finite &a, const Finite &b)
+inline bool operator==(const Finite &a, const Finite &b) noexcept
 {
     return BigInteger(a) == BigInteger(b);
 }
 
-inline bool operator!=(const Finite &a, const Finite &b)
+inline bool operator!=(const Finite &a, const Finite &b) noexcept
 {
     return BigInteger(a) != BigInteger(b);
 }

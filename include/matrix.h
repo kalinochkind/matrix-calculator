@@ -191,14 +191,14 @@ inline std::ostream &operator<<(std::ostream &out, const Matrix<Field> &a)
 {
     a._write_to_ostream(out);
     return out;
-};
+}
 
 template<class Field>
 inline std::istream &operator>>(std::istream &in, Matrix<Field> &a)
 {
     a._read_from_istream(in);
     return in;
-};
+}
 
 template<class Field>
 void makeIntColumns(Matrix<Field> &m);

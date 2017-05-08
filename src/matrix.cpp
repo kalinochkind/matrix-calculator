@@ -325,7 +325,7 @@ const Matrix<Field> Matrix<Field>::transposed() const
             res[j][i] = (*this)[i][j];
         }
     return res;
-};
+}
 
 template <class Field>
 const Field Matrix<Field>::trace() const
@@ -655,7 +655,7 @@ void Matrix<Field>::_read_from_istream(std::istream &in)
     }
 }
 
-void makeIntColumns(Matrix<Finite> &) {};
+void makeIntColumns(Matrix<Finite> &) {}
 
 void makeIntColumns(Matrix<Rational> &m)
 {
@@ -677,7 +677,7 @@ void makeIntColumns(Matrix<Rational> &m)
             m[i][col] *= g;
         }
     }
-};
+}
 
 
 template class Matrix<Rational>;

@@ -1,7 +1,7 @@
 #include "biginteger.h"
 #include <algorithm>
 
-void BigInteger::normalize()
+void BigInteger::normalize() noexcept
 {
     while(digits.size() && digits.back() == 0)
         digits.pop_back();
@@ -9,7 +9,7 @@ void BigInteger::normalize()
         negative = false;
 }
 
-void BigInteger::shiftRight(size_t a)
+void BigInteger::shiftRight(size_t a) noexcept
 {
     digits.resize(digits.size() + a);
     for(size_t i = digits.size() - 1; i >= a; --i)
@@ -22,7 +22,7 @@ void BigInteger::shiftRight(size_t a)
     }
 }
 
-void BigInteger::multiply(unsigned a)
+void BigInteger::multiply(unsigned a) noexcept
 {
     long long carry = 0;
     for(size_t i = 0; carry || i < digits.size(); i++)
@@ -35,7 +35,7 @@ void BigInteger::multiply(unsigned a)
     }
 }
 
-compare_t BigInteger::_compareAbs(const BigInteger &a) const
+compare_t BigInteger::_compareAbs(const BigInteger &a) const noexcept
 {
     if(digits.size() < a.digits.size())
         return CMP_LESS;
@@ -51,7 +51,7 @@ compare_t BigInteger::_compareAbs(const BigInteger &a) const
     return CMP_EQUAL;
 }
 
-const BigInteger BigInteger::karatsuba(const BigInteger &a) const
+const BigInteger BigInteger::karatsuba(const BigInteger &a) const noexcept
 {
     if(a.digits.size() <= 1)
     {
@@ -62,6 +62,10 @@ const BigInteger BigInteger::karatsuba(const BigInteger &a) const
     size_t maxlen = std::max(digits.size(), a.digits.size());
     maxlen += maxlen % 2;
     BigInteger a1, a2, b1, b2;
+    a1.digits.reserve(maxlen / 2 + 1);
+    a2.digits.reserve(maxlen / 2 + 1);
+    b1.digits.reserve(maxlen / 2 + 1);
+    b2.digits.reserve(maxlen / 2 + 1);
     for(size_t i = 0; i < maxlen; i++)
     {
         if(i * 2 < maxlen)
@@ -112,7 +116,7 @@ void BigInteger::_divide(int a, int &remainder)
     normalize();
 }
 
-void BigInteger::_divide_by_2()
+void BigInteger::_divide_by_2() noexcept
 {
     bool carry = false;
     for(auto i = digits.rbegin(); i != digits.rend(); ++i)
@@ -131,7 +135,7 @@ void BigInteger::_divide_by_2()
     normalize();
 }
 
-const BigInteger BigInteger::_divide_long(BigInteger a)
+const BigInteger BigInteger::_divide_long(BigInteger a) noexcept
 {
     negative = a.negative = false;
     BigInteger ans;
@@ -144,6 +148,7 @@ const BigInteger BigInteger::_divide_long(BigInteger a)
         ++shift;
     }
     a.digits.erase(a.digits.begin());
+    ans.digits.reserve(shift);
     for(; shift; --shift)
     {
         int l = 0, r = BLOCK_MOD;
@@ -164,7 +169,7 @@ const BigInteger BigInteger::_divide_long(BigInteger a)
     return ans;
 }
 
-BigInteger::BigInteger(long long a): digits(), negative(false)
+BigInteger::BigInteger(long long a) noexcept: digits(), negative(false)
 {
     if(a < 0)
     {
@@ -207,7 +212,7 @@ BigInteger::BigInteger(const std::string &s): digits(), negative(false)
     normalize();
 }
 
-compare_t BigInteger::_compare(const BigInteger &a) const
+compare_t BigInteger::_compare(const BigInteger &a) const noexcept
 {
     if(negative && !a.negative)
         return CMP_LESS;
@@ -216,7 +221,7 @@ compare_t BigInteger::_compare(const BigInteger &a) const
     return static_cast<compare_t>(_compareAbs(a) * (negative ? -1 : 1));
 }
 
-std::string BigInteger::toString() const
+std::string BigInteger::toString() const noexcept
 {
     if(digits.empty())
         return "0";
@@ -236,7 +241,7 @@ std::string BigInteger::toString() const
     return res;
 }
 
-BigInteger &BigInteger::operator+=(const BigInteger &a)
+BigInteger &BigInteger::operator+=(const BigInteger &a) noexcept
 {
     bool sub = negative ^a.negative;
     int rem = 0;
@@ -277,7 +282,7 @@ BigInteger &BigInteger::operator+=(const BigInteger &a)
     return *this;
 }
 
-BigInteger &BigInteger::operator*=(BigInteger a)
+BigInteger &BigInteger::operator*=(BigInteger a) noexcept
 {
     bool neg = negative ^a.negative;
     if(_compareAbs(a) == CMP_LESS)
@@ -327,7 +332,7 @@ BigInteger &BigInteger::operator%=(const BigInteger &a)
     return *this -= temp;
 }
 
-BigInteger &BigInteger::operator-=(const BigInteger &a)
+BigInteger &BigInteger::operator-=(const BigInteger &a) noexcept
 {
     negative ^= 1;
     *this += a;
@@ -336,21 +341,21 @@ BigInteger &BigInteger::operator-=(const BigInteger &a)
     return *this;
 }
 
-const BigInteger operator+(const BigInteger &a, const BigInteger &b)
+const BigInteger operator+(const BigInteger &a, const BigInteger &b) noexcept
 {
     BigInteger temp(a);
     temp += b;
     return temp;
 }
 
-const BigInteger operator-(const BigInteger &a, const BigInteger &b)
+const BigInteger operator-(const BigInteger &a, const BigInteger &b) noexcept
 {
     BigInteger temp(a);
     temp -= b;
     return temp;
 }
 
-const BigInteger operator*(const BigInteger &a, const BigInteger &b)
+const BigInteger operator*(const BigInteger &a, const BigInteger &b) noexcept
 {
     BigInteger temp(a);
     temp *= b;
@@ -385,7 +390,7 @@ std::istream &operator>>(std::istream &in, BigInteger &a)
 }
 
 
-const BigInteger gcd(BigInteger a, BigInteger b)
+const BigInteger gcd(BigInteger a, BigInteger b) noexcept
 {
     BigInteger d = 1;
     while(a && b)

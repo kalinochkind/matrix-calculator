@@ -6,7 +6,7 @@ include_directories(/usr/include/readline)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall")
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra -Weffc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall -Wextra -Weffc++ -pedantic")
 
 set(SOURCE_FILES src/main.cpp src/rational.cpp src/parser.cpp src/biginteger.cpp src/matrix.cpp src/polynom.cpp)
 add_executable(matrix ${SOURCE_FILES})
