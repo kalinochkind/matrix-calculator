@@ -1,5 +1,6 @@
 #include "polynom.h"
 #include "finite.h"
+#include "complex.h"
 
 template<class Field>
 void Polynom<Field>::extend(unsigned sz)
@@ -46,7 +47,7 @@ compare_t Polynom<Field>::ordinalCmp(const Polynom &a) const
         return CMP_LESS;
     if(d > ad)
         return CMP_GREATER;
-    for(int i=0;i<=d;++i)
+    for(int i = 0; i <= d; ++i)
     {
         if(m[0][i] < a.m[0][i])
             return CMP_LESS;
@@ -146,7 +147,7 @@ const Polynom<Field> Polynom<Field>::diff() const
     if(t < 1)
         return Polynom();
     Polynom ans(t);
-    for(int i=1;i<=t;++i)
+    for(int i = 1; i <= t; ++i)
     {
         ans.m[0][ans.m.width() - i] = m[0][m.width() - i - 1] * i;
     }
@@ -156,7 +157,7 @@ const Polynom<Field> Polynom<Field>::diff() const
 template<class Field>
 bool Polynom<Field>::isOrdinal() const
 {
-    for(unsigned i=0;i<m.width();++i)
+    for(unsigned i = 0; i < m.width(); ++i)
     {
         if(m[0][i] != BigInteger(m[0][i]))
             return false;
@@ -177,12 +178,12 @@ const Polynom<Field> Polynom<Field>::ordinalAdd(const Polynom &a) const
     if(degdiff < 0)
         return a;
     Polynom x(degree() + 1);
-    for(int i=0;i<degdiff;++i)
+    for(int i = 0; i < degdiff; ++i)
     {
         x.m[0][i] = m[0][i];
     }
     x.m[0][degdiff] = m[0][degdiff] + a.m[0][0];
-    for(unsigned i=degdiff+1;i<x.m.width();++i)
+    for(unsigned i = degdiff + 1; i < x.m.width(); ++i)
     {
         x.m[0][i] = a.m[0][i - degdiff];
     }
@@ -198,7 +199,7 @@ const Polynom<Field> Polynom<Field>::ordinalMul(const Polynom &a) const
     if(deg < 0 || a.degree() < 0)
         return Polynom();
     Polynom res(deg + a.degree() + 1);
-    for(unsigned i=0;i<a.m.width();++i)
+    for(unsigned i = 0; i < a.m.width(); ++i)
     {
         unsigned pow = a.m.width() - i - 1;
         if(pow > 0)
@@ -227,10 +228,10 @@ const Polynom<Field> Polynom<Field>::ordinalSub(const Polynom &a) const
     if(d < 0 || d < a.degree())
         return Polynom();
     Matrix<Field> m(1, d + 1);
-    for(int coeff=0;coeff<d+1;++coeff)
+    for(int coeff = 0; coeff < d + 1; ++coeff)
     {
         BigInteger l = 0, r = 1;
-        for(;;r*=2)
+        for(;; r *= 2)
         {
             m[0][coeff] = r - 1;
             Polynom t(m);
@@ -271,10 +272,10 @@ const std::pair<Polynom<Field>, Polynom<Field>> Polynom<Field>::ordinalDiv(const
     if(d < 0 || d < a.degree())
         return {Polynom(), *this};
     Matrix<Field> m(1, d + 1);
-    for(int coeff=0;coeff<d+1;++coeff)
+    for(int coeff = 0; coeff < d + 1; ++coeff)
     {
         BigInteger l = 0, r = 1;
-        for(;;r*=2)
+        for(;; r *= 2)
         {
             m[0][coeff] = r - 1;
             Polynom t(m);
@@ -309,7 +310,7 @@ template<class Field>
 const Field Polynom<Field>::valueAt(Field a) const
 {
     Field res = 0;
-    for(unsigned i=0;i<m.width();++i)
+    for(unsigned i = 0; i < m.width(); ++i)
     {
         res *= a;
         res += m[0][i];
@@ -328,7 +329,7 @@ const Polynom<Field> Polynom<Field>::power(const BigInteger &pow) const
     {
         if(p.odd())
         {
-            if (t_set)
+            if(t_set)
                 t *= a;
             else
                 t = a;
@@ -351,6 +352,12 @@ Rational _denominator(const Rational &a)
     return a.denominator();
 }
 
+Complex _denominator(const Complex &a)
+{
+    return a.denominator();
+}
+
+
 template<class Field>
 const std::vector<Field> Polynom<Field>::roots() const
 {
@@ -372,7 +379,7 @@ const std::vector<Field> Polynom<Field>::roots() const
     if(deg <= 0)
         return ans;
     Field root_mul = Field(1) / _denominator(t.m[0][t.m.width() - 1]);
-    for(BigInteger i=1;i<=5000;++i)
+    for(BigInteger i = 1; i <= 5000; ++i)
     {
         while(deg && t.valueAt(Field(i) * root_mul) == 0)
         {
@@ -392,5 +399,67 @@ const std::vector<Field> Polynom<Field>::roots() const
     return ans;
 }
 
-template class Polynom<Rational>;
-template class Polynom<Finite>;
+template<>
+const std::vector<Complex> Polynom<Complex>::roots() const
+{
+    std::vector<Complex> ans;
+    Polynom<Complex> t(*this);
+    Polynom<Complex> x(Complex(1));
+    x.multiplyX(1);
+    int deg = t.degree();
+    if(deg == 0)
+        return ans;
+    if(deg < 0)
+        return {0};
+    while(t.m[0][t.m.width() - 1] == 0)
+    {
+        --deg;
+        ans.push_back(0);
+        t /= x;
+    }
+    if(deg <= 0)
+        return ans;
+    Complex root_mul = Complex(1) / _denominator(t.m[0][t.m.width() - 1]);
+    for(BigInteger i = 0; i <= 25; ++i)
+    {
+        for(BigInteger j = 0; j <= 25; ++j)
+        {
+            while(deg && t.valueAt(Complex(i, j) * root_mul) == 0)
+            {
+                --deg;
+                ans.push_back(Complex(i, j) * root_mul);
+                t /= x - Polynom(Complex(i, j) * root_mul);
+            }
+            while(deg && t.valueAt(Complex(i, -j) * root_mul) == 0)
+            {
+                --deg;
+                ans.push_back(Complex(i, -j) * root_mul);
+                t /= x - Polynom(Complex(i, -j) * root_mul);
+            }
+            while(deg && t.valueAt(Complex(-i, j) * root_mul) == 0)
+            {
+                --deg;
+                ans.push_back(Complex(-i, j) * root_mul);
+                t /= x - Polynom(Complex(-i, j) * root_mul);
+            }
+            while(deg && t.valueAt(Complex(-i, -j) * root_mul) == 0)
+            {
+                --deg;
+                ans.push_back(Complex(-i, -j) * root_mul);
+                t /= x - Polynom(Complex(-i, -j) * root_mul);
+            }
+            if(deg <= 0)
+                return ans;
+        }
+    }
+    return ans;
+}
+
+template
+class Polynom<Rational>;
+
+template
+class Polynom<Finite>;
+
+template
+class Polynom<Complex>;

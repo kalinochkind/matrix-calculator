@@ -27,6 +27,11 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
                 ans.push_back({TOKEN_FUNC, func});
             if(num.size())
                 ans.push_back({TOKEN_NUMBER, num});
+            if(i == 'I' && poly.size())
+            {
+                poly.push_back(i);
+                continue;
+            }
             num = func = "";
             if(last == TOKEN_MATRIX || last == TOKEN_NUMBER || last == TOKEN_RIGHTPAR || last == TOKEN_POLY)
                 ans.push_back({TOKEN_OP, "*"});

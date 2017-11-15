@@ -2,6 +2,7 @@
 #include "parser.h"
 #include "finite.h"
 #include "polynom.h"
+#include "complex.h"
 #include <map>
 #include <set>
 #include <sstream>
@@ -13,6 +14,7 @@
 using namespace std;
 
 BigInteger _FINITE_ORDER = 2;
+bool _is_complex = false;
 
 class end_of_input: public exception
 {
@@ -107,13 +109,13 @@ void processOp(string op, vector<NumMatrix> &st, size_t opcount,
             die("Invalid number of arguments: " + op);
         opcount = operations[op].first;
     }
-    vector<NumMatrix*> args;
-    for(;opcount;--opcount)
+    vector<NumMatrix *> args;
+    for(; opcount; --opcount)
     {
         args.push_back(&st[st.size() - opcount]);
     }
     auto res = operations[op].second(args);
-    for(size_t i=0;i<args.size();++i)
+    for(size_t i = 0; i < args.size(); ++i)
     {
         st.pop_back();
     }
@@ -265,6 +267,13 @@ Matrix<Finite> f_cfrac(Finite)
     return 0;
 }
 
+Matrix<Complex> f_cfrac(Complex)
+{
+    die("cfrac is supported only for rationals");
+    return 0;
+}
+
+
 Matrix<Rational> f_cfrac(Rational a)
 {
     std::vector<Rational> ans = {0};
@@ -306,7 +315,15 @@ Finite f_revcfrac(const Matrix<Finite> &)
     return 0;
 }
 
+Complex f_revcfrac(const Matrix<Complex> &)
+{
+    die("rcfrac is supported only for rationals");
+    return 0;
+}
+
 void printDecimalResult(const Finite &) {}
+
+void printDecimalResult(const Complex &) {}
 
 void printDecimalResult(const Rational &a)
 {
@@ -327,14 +344,24 @@ Polynom<Field> gcd2(const Polynom<Field> &a, const Polynom<Field> &b)
     return a.gcd(b);
 }
 
+
+void _setI(map<char, _NumMatrix<Complex>> &mmap)
+{
+    mmap['I'] = Complex(0, 1);
+}
+
+void _setI(map<char, _NumMatrix<Rational>> &) {}
+
+void _setI(map<char, _NumMatrix<Finite>> &) {}
+
 template<class Field>
 void f_expr(string expr)
 {
     typedef _NumMatrix<Field> NumMatrix;
     map<string, pair<int, NumMatrix (*)(const vector<NumMatrix *> &)> > operations =
             {
-                    {"+",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + *a[1]; }}},
-                    {"^",         {2, [](const vector<NumMatrix *> &a) {
+                    {"+",       {2,  [](const vector<NumMatrix *> &a) { return *a[0] + *a[1]; }}},
+                    {"^",       {2,  [](const vector<NumMatrix *> &a) {
                         Matrix<Field> m = a[1]->toMatrix();
                         if(m.height() != 1 || m.width() != 1)
                             die("Invalid use of ^: integer required");
@@ -348,48 +375,48 @@ void f_expr(string expr)
                         }
                         return NumMatrix(a[0]->toMatrix().power(BigInteger(m[0][0])));
                     }}},
-                    {"*",         {2, [](const vector<NumMatrix *> &a) {
+                    {"*",       {2,  [](const vector<NumMatrix *> &a) {
                         return *a[0] * *a[1];
                     }}},
-                    {"/",         {2, [](const vector<NumMatrix *> &a) {
+                    {"/",       {2,  [](const vector<NumMatrix *> &a) {
                         return *a[0] / *a[1];
                     }}},
-                    {"%",         {2, [](const vector<NumMatrix *> &a) {
+                    {"%",       {2,  [](const vector<NumMatrix *> &a) {
                         return *a[0] % *a[1];
                     }}},
-                    {"-",         {2, [](const vector<NumMatrix *> &a) { return *a[0] + -*a[1]; }}},
-                    {"\\",        {1, [](const vector<NumMatrix *> &a) { return -*a[0]; }}},
-                    {"det",       {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().det()); }}},
-                    {"rank",      {1, [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().rank()); }}},
-                    {"trace",     {1, [](const vector<NumMatrix *> &a) {
+                    {"-",       {2,  [](const vector<NumMatrix *> &a) { return *a[0] + -*a[1]; }}},
+                    {"\\",      {1,  [](const vector<NumMatrix *> &a) { return -*a[0]; }}},
+                    {"det",     {1,  [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().det()); }}},
+                    {"rank",    {1,  [](const vector<NumMatrix *> &a) { return NumMatrix(a[0]->toMatrix().rank()); }}},
+                    {"trace",   {1,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().trace());
                     }}},
-                    {"diag",      {-1, [](const vector<NumMatrix *> &a) {
+                    {"diag",    {-1, [](const vector<NumMatrix *> &a) {
                         Matrix<Field> m(a.size());
-                        for(unsigned i=0;i<a.size();++i)
+                        for(unsigned i = 0; i < a.size(); ++i)
                         {
                             m[i][i] = a[i]->toMatrix()[0][0];
                         }
                         return NumMatrix(m);
                     }}},
-                    {"t", {1, [](const vector<NumMatrix *> &a) {
+                    {"t",       {1,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().transposed());
                     }}},
-                    {"id",        {1, [](const vector<NumMatrix *> &a) {
+                    {"id",      {1,  [](const vector<NumMatrix *> &a) {
                         if(a[0]->type != NumMatrixType::number || a[0]->im <= 0)
                             die("Invalid use of id");
                         return NumMatrix(Matrix<Field>::identity(int(a[0]->im)));
                     }}},
-                    {"=",         {2, [](const vector<NumMatrix *> &a) {
+                    {"=",       {2,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix() == a[1]->toMatrix());
                     }}},
-                    {"width",     {1, [](const vector<NumMatrix *> &a) {
+                    {"width",   {1,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().width());
                     }}},
-                    {"height",    {1, [](const vector<NumMatrix *> &a) {
+                    {"height",  {1,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(a[0]->toMatrix().height());
                     }}},
-                    {"solve",     {-1, [](const vector<NumMatrix *> &a) {
+                    {"solve",   {-1, [](const vector<NumMatrix *> &a) {
                         if(a.size() == 1)
                             return NumMatrix(a[0]->toMatrix().partial());
                         else if(a.size() == 2)
@@ -403,23 +430,23 @@ void f_expr(string expr)
                             die("solve requires 1 or 2 arguments");
                         return NumMatrix();
                     }}},
-                    {"col",       {2, [](const vector<NumMatrix *> &a) {
+                    {"col",     {2,  [](const vector<NumMatrix *> &a) {
                         if(a[1]->type != NumMatrixType::number)
                             die("Invalid use of col");
                         Matrix<Field> m = a[0]->toMatrix();
                         if(a[1]->im < 0 || a[1]->im >= int(m.width()))
                             die("at: out of range");
-                        return NumMatrix(m.submatrix(0, int(a[1]->im), m.height()-1, int(a[1]->im)));
+                        return NumMatrix(m.submatrix(0, int(a[1]->im), m.height() - 1, int(a[1]->im)));
                     }}},
-                    {"row",       {2, [](const vector<NumMatrix *> &a) {
+                    {"row",     {2,  [](const vector<NumMatrix *> &a) {
                         if(a[1]->type != NumMatrixType::number)
                             die("Invalid use of row");
                         Matrix<Field> m = a[0]->toMatrix();
                         if(a[1]->im < 0 || a[1]->im >= int(m.height()))
                             die("at: out of range");
-                        return NumMatrix(m.submatrix(int(a[1]->im), 0, int(a[1]->im), m.width()-1));
+                        return NumMatrix(m.submatrix(int(a[1]->im), 0, int(a[1]->im), m.width() - 1));
                     }}},
-                    {"int",       {1, [](const vector<NumMatrix *> &a) {
+                    {"int",     {1,  [](const vector<NumMatrix *> &a) {
                         if(a[0]->type == NumMatrixType::number)
                             return *a[0];
                         if(a[0]->type == NumMatrixType::polynom)
@@ -428,94 +455,95 @@ void f_expr(string expr)
                             die("int: matrix 1*1 required");
                         return NumMatrix(int(a[0]->fm[0][0]));
                     }}},
-                    {"cfrac",     {1, [](const vector<NumMatrix *> &a) {
+                    {"cfrac",   {1,  [](const vector<NumMatrix *> &a) {
                         auto m = a[0]->toMatrix();
                         if(m.width() != 1 || m.height() != 1)
                             die("cfrac: matrix 1*1 required");
                         return NumMatrix(f_cfrac(m[0][0]));
                     }}},
-                    {"rcfrac",    {1, [](const vector<NumMatrix *> &a) {
+                    {"rcfrac",  {1,  [](const vector<NumMatrix *> &a) {
                         auto m = a[0]->toMatrix();
                         if(m.height() != 1 || !m.width())
                             die("rcfrac: matrix 1*n required");
                         return NumMatrix(f_revcfrac(m));
                     }}},
-                    {"joinh",     {-1, [](const vector<NumMatrix *> &a) {
+                    {"joinh",   {-1, [](const vector<NumMatrix *> &a) {
                         Matrix<Field> res = a[0]->toMatrix();
-                        for(size_t i=1;i<a.size();++i)
+                        for(size_t i = 1; i < a.size(); ++i)
                             res = res.joinHorizontal(a[i]->toMatrix());
                         return NumMatrix(res);
                     }}},
-                    {"joinv",     {-1, [](const vector<NumMatrix *> &a) {
+                    {"joinv",   {-1, [](const vector<NumMatrix *> &a) {
                         Matrix<Field> res = a[0]->toMatrix();
-                        for(size_t i=1;i<a.size();++i)
+                        for(size_t i = 1; i < a.size(); ++i)
                             res = res.joinVertical(a[i]->toMatrix());
                         return NumMatrix(res);
                     }}},
-                    {"gauss",     {1, [](const vector<NumMatrix *> &a) {
+                    {"gauss",   {1,  [](const vector<NumMatrix *> &a) {
                         Matrix<Field> m = a[0]->toMatrix();
                         m.gauss();
                         return NumMatrix(m);
                     }}},
-                    {"fund",     {1, [](const vector<NumMatrix *> &a) {
+                    {"fund",    {1,  [](const vector<NumMatrix *> &a) {
                         Matrix<Field> m = a[0]->toMatrix();
                         return NumMatrix(m.fundamental());
                     }}},
-                    {"gcd",       {-1, [](const vector<NumMatrix *> &a) {
+                    {"gcd",     {-1, [](const vector<NumMatrix *> &a) {
                         if(a.size() < 2)
                             die("gcd requires at least 2 arguments");
                         Polynom<Field> p(a[0]->toMatrix());
-                        for(size_t i=1;i<a.size();++i)
+                        for(size_t i = 1; i < a.size(); ++i)
                             p = gcd2(p, Polynom<Field>(a[i]->toMatrix()));
                         return NumMatrix(p);
                     }}},
-                    {"degree",    {1, [](const vector<NumMatrix *> &a) {
+                    {"degree",  {1,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix());
                         return NumMatrix(p1.degree());
                     }}},
-                    {"polynom",   {1, [](const vector<NumMatrix *> &a) {
+                    {"polynom", {1,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix());
                         return NumMatrix(p1);
                     }}},
-                    {"divmod", {2, [](const vector<NumMatrix *> &a) {
+                    {"divmod",  {2,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         Polynom<Field> div = p1 / p2, mod = p1 % p2;
                         unsigned mx = std::max(div.degree(), mod.degree()) + 1;
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}},
-                    {"diff", {1, [](const vector<NumMatrix *> &a) {
+                    {"diff",    {1,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p(a[0]->toMatrix());
                         return NumMatrix(p.diff());
                     }}},
-                    {"ordadd", {2, [](const vector<NumMatrix *> &a) {
+                    {"ordadd",  {2,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         return NumMatrix(p1.ordinalAdd(p2));
                     }}},
-                    {"ordmul", {2, [](const vector<NumMatrix *> &a) {
+                    {"ordmul",  {2,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         return NumMatrix(p1.ordinalMul(p2));
                     }}},
-                    {"ordsub", {2, [](const vector<NumMatrix *> &a) {
+                    {"ordsub",  {2,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         return NumMatrix(p1.ordinalSub(p2));
                     }}},
-                    {"orddiv", {2, [](const vector<NumMatrix *> &a) {
+                    {"orddiv",  {2,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p1(a[0]->toMatrix()), p2(a[1]->toMatrix());
                         auto res = p1.ordinalDiv(p2);
                         Polynom<Field> div = res.first, mod = res.second;
                         unsigned mx = std::max(div.degree(), mod.degree()) + 1;
                         return NumMatrix(div.toMatrix(mx).joinVertical(mod.toMatrix(mx)));
                     }}},
-                    {"char", {1, [](const vector<NumMatrix *> &a) {
+                    {"char",    {1,  [](const vector<NumMatrix *> &a) {
                         return NumMatrix(Polynom<Field>(a[0]->toMatrix().charPolynom()));
                     }}},
-                    {"roots", {1, [](const vector<NumMatrix *> &a) {
+                    {"roots",   {1,  [](const vector<NumMatrix *> &a) {
                         Polynom<Field> p(a[0]->toMatrix());
                         vector<Field> v = p.roots();
                         Matrix<Field> m(1, v.size());
-                        std::sort(v.begin(), v.end(), [](const Field &a, const Field &b){
-                            return BigInteger(a) < BigInteger(b);});
-                        for(unsigned i=0;i<v.size();++i)
+                        std::sort(v.begin(), v.end(), [](const Field &a, const Field &b) {
+                            return BigInteger(a) < BigInteger(b);
+                        });
+                        for(unsigned i = 0; i < v.size(); ++i)
                             m[0][i] = v[i];
                         return NumMatrix(m);
                     }}},
@@ -533,12 +561,17 @@ void f_expr(string expr)
     }
     auto v = splitExpression(s);
     static map<char, NumMatrix> mmap;
+    _setI(mmap);
     char save_to = 0;
     if(v.size() && v[0].first == TOKEN_FUNC && v[0].second == "let")
     {
         if(v.size() < 3 || v[1].first != TOKEN_MATRIX)
         {
             die("Invalid use of let");
+        }
+        if(_is_complex && v[1].second[0] == 'I')
+        {
+            die("Cannot assign to I");
         }
         save_to = v[1].second[0];
         v.erase(v.begin());
@@ -748,7 +781,9 @@ void f_expr(string expr)
     {
         cout << e.what() << endl;
     }
-    catch(end_of_input &e) {}
+    catch(end_of_input &e)
+    {
+    }
 }
 
 
@@ -756,14 +791,12 @@ int main(int argc, char **argv)
 {
     try
     {
-        string arg1 = (argc > 1 ? argv[1] : "");
-        string arg2 = (argc > 2 ? argv[2] : "");
-        if(isdigit(arg2) && !isdigit(arg1))
-            swap(arg1, arg2);
+        string arg = (argc > 1 ? argv[1] : "");
+        string expr;
         using_history();
-        if(isdigit(arg1))
+        if(isdigit(arg))
         {
-            _FINITE_ORDER = BigInteger(arg1);
+            _FINITE_ORDER = BigInteger(arg);
             if(_FINITE_ORDER < 2)
                 die("Order must be at least 2");
             /*if(!_FINITE_ORDER.isPrime())
@@ -772,11 +805,26 @@ int main(int argc, char **argv)
             {
                 try
                 {
-                    f_expr<Finite>(arg2);
+                    f_expr<Finite>(expr);
                 }
-                catch(invalid_expression &e) {}
-            }
-            while(arg2.empty());
+                catch(invalid_expression &e)
+                {
+                }
+            } while(expr.empty());
+        }
+        else if(arg == "c" || arg == "C")
+        {
+            _is_complex = true;
+            do
+            {
+                try
+                {
+                    f_expr<Complex>(expr);
+                }
+                catch(invalid_expression &e)
+                {
+                }
+            } while(expr.empty());
         }
         else
         {
@@ -784,11 +832,12 @@ int main(int argc, char **argv)
             {
                 try
                 {
-                    f_expr<Rational>(arg1);
+                    f_expr<Rational>(expr);
                 }
-                catch(invalid_expression &e) {}
-            }
-            while(arg1.empty());
+                catch(invalid_expression &e)
+                {
+                }
+            } while(expr.empty());
         }
     }
     catch(matrix_error e)

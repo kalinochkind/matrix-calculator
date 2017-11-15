@@ -1,5 +1,6 @@
 #include "matrix.h"
 #include "finite.h"
+#include "complex.h"
 #include <sstream>
 
 const unsigned strassen_threshold = 32;
@@ -679,6 +680,31 @@ void makeIntColumns(Matrix<Rational> &m)
     }
 }
 
+void makeIntColumns(Matrix<Complex> &m)
+{
+    for(unsigned col=0;col<m.width();++col)
+    {
+        BigInteger g = 1;
+        unsigned pos = 0, neg = 0;
+        for(unsigned i=0;i<m.height();++i)
+        {
+            if(m[i][col].re().denominator() != 1 || m[i][col].im().denominator() != 1 )
+            {
+                g *= m[i][col].denominator() / gcd(g, m[i][col].denominator());
+            }
+            pos += m[i][col] > 0;
+            neg += m[i][col] < 0;
+        }
+        if(neg > pos)
+            g = -g;
+        for(unsigned i=0;i<m.height();++i)
+        {
+            m[i][col] *= g;
+        }
+    }
+}
+
 
 template class Matrix<Rational>;
 template class Matrix<Finite>;
+template class Matrix<Complex>;
