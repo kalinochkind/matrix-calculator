@@ -287,7 +287,7 @@ Matrix<Rational> f_cfrac(Rational a)
     while(a.denominator() != 1)
     {
         a = 1 / a;
-        ans.push_back(a.numerator() / a.denominator());
+        ans.emplace_back(a.numerator() / a.denominator());
         a -= (a.numerator() / a.denominator());
     }
     Matrix<Rational> res(1, ans.size());
@@ -540,8 +540,8 @@ void f_expr(string expr)
                         Polynom<Field> p(a[0]->toMatrix());
                         vector<Field> v = p.roots();
                         Matrix<Field> m(1, v.size());
-                        std::sort(v.begin(), v.end(), [](const Field &a, const Field &b) {
-                            return BigInteger(a) < BigInteger(b);
+                        std::sort(v.begin(), v.end(), [](const Field &x, const Field &y) {
+                            return BigInteger(x) < BigInteger(y);
                         });
                         for(unsigned i = 0; i < v.size(); ++i)
                             m[0][i] = v[i];
@@ -840,7 +840,7 @@ int main(int argc, char **argv)
             } while(expr.empty());
         }
     }
-    catch(matrix_error e)
+    catch(matrix_error &e)
     {
         cout << "Matrix error: " << e.what() << endl;
         return 1;
