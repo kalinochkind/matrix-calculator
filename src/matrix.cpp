@@ -497,7 +497,7 @@ const Matrix<Field> Matrix<Field>::partial() const
     Matrix ans(1, N - 1);
     if(sys.gauss(&right) != rank())
     {
-        throw matrix_error("No solutions");
+        return Matrix();
     }
     int row = M - 1;
     for(int col=N-2;col>=0;--col)
