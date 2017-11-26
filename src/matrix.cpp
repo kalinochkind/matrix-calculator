@@ -101,7 +101,7 @@ const Matrix<Field> Matrix<Field>::operator*(const Matrix &a) const
     }
 }
 
-template <class Field>
+template<class Field>
 Matrix<Field> Matrix<Field>::_multiplyCube(const Matrix &a) const
 {
     assert(N == a.M);
@@ -278,7 +278,7 @@ const Matrix<Field> Matrix<Field>::operator-() const
     return temp;
 }
 
-template <class Field>
+template<class Field>
 Matrix<Field> &Matrix<Field>::operator-=(const Matrix &a)
 {
     if(M != a.M || N != a.N)
@@ -290,7 +290,7 @@ Matrix<Field> &Matrix<Field>::operator-=(const Matrix &a)
     return *this;
 }
 
-template <class Field>
+template<class Field>
 Matrix<Field> &Matrix<Field>::operator*=(Field a)
 {
     for(unsigned i = 0; i < N * M; ++i)
@@ -300,7 +300,7 @@ Matrix<Field> &Matrix<Field>::operator*=(Field a)
     return *this;
 }
 
-template <class Field>
+template<class Field>
 const Field Matrix<Field>::det() const
 {
     if(N != M)
@@ -316,7 +316,7 @@ const Field Matrix<Field>::det() const
     return ans;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::transposed() const
 {
     Matrix res(N, M);
@@ -328,7 +328,7 @@ const Matrix<Field> Matrix<Field>::transposed() const
     return res;
 }
 
-template <class Field>
+template<class Field>
 const Field Matrix<Field>::trace() const
 {
     if(N != M)
@@ -341,7 +341,7 @@ const Field Matrix<Field>::trace() const
     return ans;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::inverted() const
 {
     Matrix ext = Matrix::identity(N);
@@ -349,7 +349,7 @@ const Matrix<Field> Matrix<Field>::inverted() const
     return ext;
 }
 
-template <class Field>
+template<class Field>
 bool Matrix<Field>::operator==(const Matrix &a) const
 {
     if(M != a.M || N != a.N)
@@ -362,7 +362,7 @@ bool Matrix<Field>::operator==(const Matrix &a) const
     return true;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::submatrix(unsigned x1, unsigned y1, unsigned x2, unsigned y2) const
 {
     if(x1 > x2)
@@ -380,7 +380,7 @@ const Matrix<Field> Matrix<Field>::submatrix(unsigned x1, unsigned y1, unsigned 
     return res;
 }
 
-template <class Field>
+template<class Field>
 void Matrix<Field>::inverseExt(Matrix &ext)
 {
     if(N != M)
@@ -417,7 +417,7 @@ void Matrix<Field>::inverseExt(Matrix &ext)
     }
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::fundamental() const
 {
     Matrix m(*this);
@@ -425,9 +425,9 @@ const Matrix<Field> Matrix<Field>::fundamental() const
     std::vector<char> dependent(N);
     std::vector<int> dep_height(N);
     int last_nonzero = -1;
-    for(unsigned i=0;i<N;++i)
+    for(unsigned i = 0; i < N; ++i)
     {
-        for(int j=M-1;j>last_nonzero;--j)
+        for(int j = M - 1; j > last_nonzero; --j)
         {
             if(m[j][i])
             {
@@ -438,20 +438,20 @@ const Matrix<Field> Matrix<Field>::fundamental() const
             }
         }
     }
-    for(unsigned i=0;i<N;++i)
+    for(unsigned i = 0; i < N; ++i)
     {
         if(!dependent[i])
             continue;
         Field inv = Field(1) / m[dep_height[i]][i];
-        for(unsigned j=i;j<N;++j)
+        for(unsigned j = i; j < N; ++j)
         {
             m[dep_height[i]][j] *= inv;
         }
-        for(int j=0;j<dep_height[i];++j)
+        for(int j = 0; j < dep_height[i]; ++j)
         {
             if(!m[j][i])
                 continue;
-            for(unsigned q=i+1;q<N;++q)
+            for(unsigned q = i + 1; q < N; ++q)
             {
                 m[j][q] -= m[j][i] * m[dep_height[i]][q];
             }
@@ -461,16 +461,15 @@ const Matrix<Field> Matrix<Field>::fundamental() const
     Matrix ans(N, N - rk);
     int cur = 0;
     unsigned col = -1;
-    for(unsigned i=0;i<N;++i)
+    for(unsigned i = 0; i < N; ++i)
     {
         if(dependent[i])
             continue;
         do
         {
             ++col;
-        }
-        while(dependent[col]);
-        for(unsigned j=0;j<N;++j)
+        } while(dependent[col]);
+        for(unsigned j = 0; j < N; ++j)
         {
             if(dependent[j])
             {
@@ -487,7 +486,7 @@ const Matrix<Field> Matrix<Field>::fundamental() const
     return ans;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::partial() const
 {
     if(N < 2)
@@ -500,7 +499,7 @@ const Matrix<Field> Matrix<Field>::partial() const
         return Matrix();
     }
     int row = M - 1;
-    for(int col=N-2;col>=0;--col)
+    for(int col = N - 2; col >= 0; --col)
     {
         while(row >= 0 && !sys[row][col])
             --row;
@@ -510,7 +509,7 @@ const Matrix<Field> Matrix<Field>::partial() const
         if(!cval)
             continue;
         ans[0][col] = cval;
-        for(int i=0;i<=row;++i)
+        for(int i = 0; i <= row; ++i)
         {
             right[i][0] -= cval * sys[i][col];
         }
@@ -519,7 +518,7 @@ const Matrix<Field> Matrix<Field>::partial() const
 
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::power(const BigInteger &pow) const
 {
     if(M != N)
@@ -532,7 +531,7 @@ const Matrix<Field> Matrix<Field>::power(const BigInteger &pow) const
     {
         if(p.odd())
         {
-            if (t_set)
+            if(t_set)
                 t *= a;
             else
                 t = a;
@@ -545,7 +544,7 @@ const Matrix<Field> Matrix<Field>::power(const BigInteger &pow) const
     return pow < 0 ? t.inverted() : t;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::joinHorizontal(const Matrix &a) const
 {
     if(M != a.M)
@@ -567,7 +566,7 @@ const Matrix<Field> Matrix<Field>::joinHorizontal(const Matrix &a) const
     return res;
 }
 
-template <class Field>
+template<class Field>
 const Matrix<Field> Matrix<Field>::joinVertical(const Matrix &a) const
 {
     if(N != a.N)
@@ -602,7 +601,7 @@ const Matrix<Field> Matrix<Field>::charPolynom() const
     Matrix A(*this), B(identity(N));
     Matrix ans(1, N + 1);
     ans[0][0] = 1;
-    for(unsigned i=1;i<=N;++i)
+    for(unsigned i = 1; i <= N; ++i)
     {
         A = *this * B;
         Field p = A.trace() / i;
@@ -610,6 +609,148 @@ const Matrix<Field> Matrix<Field>::charPolynom() const
         ans[0][i] = -p;
     }
     return ans;
+}
+
+
+template<class T>
+std::pair<BigInteger, BigInteger> posDivmod(const T &a, const T &b)
+{
+    BigInteger aa(a), bb(b);
+    BigInteger div = aa / bb;
+    if(div * bb > aa)
+        --div;
+    return {div, aa - div * bb};
+}
+
+template<class Field>
+const Matrix<Field> Matrix<Field>::intDiagonal() const
+{
+    Matrix m(*this);
+    for(unsigned i = 0; i < M; i++)
+    {
+        for(unsigned j = 0; j < N; j++)
+        {
+            if(BigInteger(m[i][j]) != m[i][j])
+                throw matrix_error("intdiag is only defined for integer matrices");
+        }
+    }
+    for(unsigned col = 0; col < std::min(N, M); ++col)
+    {
+        if(!m[col][col])
+        {
+            for(unsigned i = col; i < M; ++i)
+            {
+                if(m[col][col])
+                    break;
+                for(unsigned j = col; j < N; ++i)
+                {
+                    if(m[i][j])
+                    {
+                        if(i != col)
+                        {
+                            for(unsigned jj = 0; jj < N; ++jj)
+                            {
+                                std::swap(m[i][jj], m[col][jj]);
+                            }
+                        }
+                        if(j != col)
+                        {
+                            for(unsigned ii = 0; ii < M; ++ii)
+                            {
+                                std::swap(m[ii][j], m[ii][col]);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            if(!m[col][col])
+                break;
+        }
+        if(m[col][col] < 0)
+        {
+            for(unsigned i = col; i < M; ++i)
+            {
+                m[i][col] = -m[i][col];
+            }
+        }
+        bool changed = true;
+        std::pair<BigInteger, BigInteger> q;
+        while(changed)
+        {
+            changed = false;
+            for(unsigned i = col + 1; i < M; ++i)
+            {
+                q = posDivmod(m[i][col], m[col][col]);
+                if(q.second)
+                {
+                    for(unsigned j = col; j < N; ++j)
+                    {
+                        m[i][j] -= m[col][j] * q.first;
+                        std::swap(m[col][j], m[i][j]);
+                    }
+                    changed = true;
+                    break;
+                }
+            }
+            if(changed)
+                continue;
+            for(unsigned j = col + 1; j < N; ++j)
+            {
+                q = posDivmod(m[col][j], m[col][col]);
+                if(q.second)
+                {
+                    for(unsigned i = col; i < M; ++i)
+                    {
+                        m[i][j] -= m[i][col] * q.first;
+                        std::swap(m[i][col], m[i][j]);
+                    }
+                    changed = true;
+                    break;
+                }
+            }
+            if(changed)
+                continue;
+            for(unsigned i = col + 1; i < M; ++i)
+            {
+                for(unsigned j = col + 1; j < N; ++j)
+                {
+                    if(BigInteger(m[i][j]) % BigInteger(m[col][col]))
+                    {
+                        BigInteger q = BigInteger(m[i][col]) / BigInteger(m[col][col]);
+                        for(unsigned jj = col; jj < N; ++jj)
+                        {
+                            m[i][jj] -= m[col][jj] * q;
+                            m[col][jj] += m[i][jj];
+                        }
+                        changed = true;
+                        break;
+                    }
+                }
+                if(changed)
+                    break;
+            }
+            if(changed)
+                continue;
+            for(unsigned i = col + 1; i < M; ++i)
+            {
+                BigInteger q = BigInteger(m[i][col]) / BigInteger(m[col][col]);
+                for(unsigned j = col; j < N; ++j)
+                {
+                    m[i][j] -= m[col][j] * q;
+                }
+            }
+            for(unsigned j = col + 1; j < N; ++j)
+            {
+                BigInteger q = BigInteger(m[col][j]) / BigInteger(m[col][col]);
+                for(unsigned i = col; i < M; ++i)
+                {
+                    m[i][j] -= m[i][col] * q;
+                }
+            }
+        }
+    }
+    return m;
 }
 
 template<class Field>
@@ -634,7 +775,7 @@ void Matrix<Field>::_write_to_ostream(std::ostream &out) const
         {
             if(j)
                 out << ' ';
-            for(unsigned t=0;t+strs[i][j].length()<max_width[j];++t)
+            for(unsigned t = 0; t + strs[i][j].length() < max_width[j]; ++t)
             {
                 out << ' ';
             }
@@ -660,11 +801,11 @@ void makeIntColumns(Matrix<Finite> &) {}
 
 void makeIntColumns(Matrix<Rational> &m)
 {
-    for(unsigned col=0;col<m.width();++col)
+    for(unsigned col = 0; col < m.width(); ++col)
     {
         BigInteger g = 1;
         unsigned pos = 0, neg = 0;
-        for(unsigned i=0;i<m.height();++i)
+        for(unsigned i = 0; i < m.height(); ++i)
         {
             if(m[i][col].denominator() != 1)
                 g *= m[i][col].denominator() / gcd(g, m[i][col].denominator());
@@ -673,7 +814,7 @@ void makeIntColumns(Matrix<Rational> &m)
         }
         if(neg > pos)
             g = -g;
-        for(unsigned i=0;i<m.height();++i)
+        for(unsigned i = 0; i < m.height(); ++i)
         {
             m[i][col] *= g;
         }
@@ -682,13 +823,13 @@ void makeIntColumns(Matrix<Rational> &m)
 
 void makeIntColumns(Matrix<Complex> &m)
 {
-    for(unsigned col=0;col<m.width();++col)
+    for(unsigned col = 0; col < m.width(); ++col)
     {
         BigInteger g = 1;
         unsigned pos = 0, neg = 0;
-        for(unsigned i=0;i<m.height();++i)
+        for(unsigned i = 0; i < m.height(); ++i)
         {
-            if(m[i][col].re().denominator() != 1 || m[i][col].im().denominator() != 1 )
+            if(m[i][col].re().denominator() != 1 || m[i][col].im().denominator() != 1)
             {
                 g *= m[i][col].denominator() / gcd(g, m[i][col].denominator());
             }
@@ -697,7 +838,7 @@ void makeIntColumns(Matrix<Complex> &m)
         }
         if(neg > pos)
             g = -g;
-        for(unsigned i=0;i<m.height();++i)
+        for(unsigned i = 0; i < m.height(); ++i)
         {
             m[i][col] *= g;
         }
@@ -705,6 +846,11 @@ void makeIntColumns(Matrix<Complex> &m)
 }
 
 
-template class Matrix<Rational>;
-template class Matrix<Finite>;
-template class Matrix<Complex>;
+template
+class Matrix<Rational>;
+
+template
+class Matrix<Finite>;
+
+template
+class Matrix<Complex>;

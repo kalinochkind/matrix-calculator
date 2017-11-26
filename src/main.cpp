@@ -547,6 +547,10 @@ void f_expr(string expr)
                             m[0][i] = v[i];
                         return NumMatrix(m);
                     }}},
+                    {"intdiag", {1,  [](const vector<NumMatrix *> &a) {
+                        Matrix<Field> m = a[0]->toMatrix();
+                        return NumMatrix(m.intDiagonal());
+                    }}},
             };
     string s;
     if(expr.empty())

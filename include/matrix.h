@@ -174,6 +174,8 @@ public:
 
     const Matrix charPolynom() const;
 
+    const Matrix intDiagonal() const;
+
     void swap(Matrix &a)
     {
         std::swap(arr, a.arr);
