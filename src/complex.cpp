@@ -60,6 +60,10 @@ Complex::Complex(const std::string &s): _re(), _im()
     {
         throw invalid_number_error("Invalid complex: " + s);
     }
+    if(s2 == "+")
+    {
+        s2 = "1";
+    }
     *this = Complex(Rational(s1), Rational(s2));
 }
 

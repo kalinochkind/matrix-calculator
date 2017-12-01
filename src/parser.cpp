@@ -44,9 +44,9 @@ const std::vector<std::pair<token_type, std::string> > splitExpression(const std
         }
         else if(i == '+' || i == '*' || i == '^' || i == '(' || i == ')' || i == '=' || i == '/' || i == '%')
         {
-            if(i == '/' && poly.size())
+            if((i == '/' || i == '+') && poly.size())
             {
-                poly.push_back('/');
+                poly.push_back(i);
                 continue;
             }
             if(func.size())
