@@ -642,7 +642,7 @@ const Matrix<Field> Matrix<Field>::intDiagonal() const
             {
                 if(m[col][col])
                     break;
-                for(unsigned j = col; j < N; ++i)
+                for(unsigned j = col; j < N; ++j)
                 {
                     if(m[i][j])
                     {
