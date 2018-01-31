@@ -700,7 +700,7 @@ void f_expr(string expr)
                     is.str(i.second);
                     is >> tt;
                     if(tt == BigInteger(tt))
-                        st.push_back(NumMatrix(int(tt)));
+                        st.push_back(NumMatrix(BigInteger(tt)));
                     else
                     {
                         Field tf;
