@@ -461,6 +461,15 @@ void f_expr(string expr)
                             die("cfrac: matrix 1*1 required");
                         return NumMatrix(f_cfrac(m[0][0]));
                     }}},
+                    {"pcfrac",   {1,  [](const vector<NumMatrix *> &a) {
+                      auto m = a[0]->toMatrix();
+                      if(m.width() != 1 || m.height() != 1)
+                          die("pcfrac: matrix 1*1 required");
+                      auto cm = f_cfrac(m[0][0]);
+                      for(size_t i = cm.width(); i; --i)
+                          cm[0][i - 1] = f_revcfrac(cm.submatrix(0, 0, 0, i - 1));
+                      return NumMatrix(cm);
+                    }}},
                     {"rcfrac",  {1,  [](const vector<NumMatrix *> &a) {
                         auto m = a[0]->toMatrix();
                         if(m.height() != 1 || !m.width())
