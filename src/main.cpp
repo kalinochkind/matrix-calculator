@@ -572,6 +572,21 @@ void f_expr(string expr)
     {
         s = expr;
     }
+    if(s == "help")
+    {
+        cout << "Available functions: ";
+        bool first = true;
+        for(auto &&p : operations)
+        {
+            if(!first)
+                cout << ", ";
+            first = false;
+            if(p.first != "\\")
+                cout << p.first;
+        }
+        cout << endl;
+        return;
+    }
     auto v = splitExpression(s);
     static map<char, NumMatrix> mmap;
     _setI(mmap);
