@@ -241,6 +241,10 @@ struct _NumMatrix
             return im + m.im;
         if(type == NumMatrixType::polynom && m.type == NumMatrixType::polynom)
             return pm + m.pm;
+        if(type == NumMatrixType::polynom && m.toMatrix().width() == 1 && m.toMatrix().height() == 1)
+            return pm + Polynom<Field>(m.toMatrix());
+        if(m.type == NumMatrixType::polynom && toMatrix().width() == 1 && toMatrix().height() == 1)
+            return Polynom<Field>(toMatrix()) + m.pm;
         Matrix<Field> m1 = toMatrix(), m2 = m.toMatrix();
         if(m1.width() == 1 && m1.height() == 1 && m2.width() == m2.height())
             return m2 + Matrix<Field>::identity(m2.width()) * m1[0][0];
@@ -788,10 +792,10 @@ void f_expr(string expr)
             processOp(opst.back().second, st, 0, operations);
             opst.pop_back();
         }
-        mmap['_'] = st[0].toMatrix();
+        mmap['_'] = st[0];
         if(save_to)
         {
-            mmap[save_to] = st[0].toMatrix();
+            mmap[save_to] = st[0];
             return;
         }
         if((v.size() == 1 || (v.size() == 2 && v[0].first == TOKEN_DOLLAR)) && matrix_read)
